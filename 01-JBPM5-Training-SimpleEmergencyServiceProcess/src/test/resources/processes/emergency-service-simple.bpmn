@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions id="Definition"
+             targetNamespace="http://www.jboss.org/drools"
+             typeLanguage="http://www.java.com/javaTypes"
+             expressionLanguage="http://www.mvel.org/2.0"
+             xmlns="http://schema.omg.org/spec/BPMN/2.0"
+             xmlns:xs="http://www.w3.org/2001/XMLSchema-instance"
+             xs:schemaLocation="http://schema.omg.org/spec/BPMN/2.0 BPMN20.xsd"
+             xmlns:g="http://www.jboss.org/drools/flow/gpd"
+             xmlns:tns="http://www.jboss.org/drools">
+
+  <resource id="Actor" name="Human Actor" />
+
+  <process processType="executable" id="com.plugtree.training.simple.emergencyservice" name="Emergency Service" tns:packageName="com.plugtree.training.simple.emergencyservice" >
+
+    <!-- nodes -->
+    <startEvent id="_1" name="StartProcess" g:x="105" g:y="16" g:width="48" g:height="48" />
+    <endEvent id="_3" name="EndProcess" g:x="105" g:y="336" g:width="48" g:height="48" />
+    <userTask id="_4" name="Request Emergency Information" g:x="16" g:y="96" g:width="227" g:height="48" implementation="humanTaskWebService" >
+      <ioSpecification>
+        <dataInput id="_4_emergency.typeInput" name="emergency.type" />
+        <dataInput id="_4_emergency.patient.ageInput" name="emergency.patient.age" />
+        <dataInput id="_4_emergency.severityInput" name="emergency.severity" />
+        <dataInput id="_4_CommentInput" name="Comment" />
+        <dataInput id="_4_TaskNameInput" name="TaskName" />
+        <inputSet>
+          <dataInputRefs>_4_emergency.typeInput</dataInputRefs>
+          <dataInputRefs>_4_emergency.patient.ageInput</dataInputRefs>
+          <dataInputRefs>_4_emergency.severityInput</dataInputRefs>
+          <dataInputRefs>_4_CommentInput</dataInputRefs>
+          <dataInputRefs>_4_TaskNameInput</dataInputRefs>
+        </inputSet>
+        <outputSet>
+        </outputSet>
+      </ioSpecification>
+      <property id="_4_Comment" />
+      <property id="_4_TaskName" />
+      <dataInputAssociation>
+        <sourceRef>_4_emergency.type</sourceRef>
+        <targetRef>_4_emergency.type</targetRef>
+      </dataInputAssociation>
+      <dataInputAssociation>
+        <sourceRef>_4_emergency.patient.age</sourceRef>
+        <targetRef>_4_emergency.patient.age</targetRef>
+      </dataInputAssociation>
+      <dataInputAssociation>
+        <sourceRef>_4_emergency.severity</sourceRef>
+        <targetRef>_4_emergency.severity</targetRef>
+      </dataInputAssociation>
+      <dataInputAssociation>
+        <assignment>
+          <from xs:type="tFormalExpression">en-UK</from>
+          <to xs:type="tFormalExpression">_4_CommentInput</to>
+        </assignment>
+        <sourceRef>_4_Comment</sourceRef>
+        <targetRef>_4_CommentInput</targetRef>
+      </dataInputAssociation>
+      <dataInputAssociation>
+        <assignment>
+          <from xs:type="tFormalExpression">RequestInformation</from>
+          <to xs:type="tFormalExpression">_4_TaskNameInput</to>
+        </assignment>
+        <sourceRef>_4_TaskName</sourceRef>
+        <targetRef>_4_TaskNameInput</targetRef>
+      </dataInputAssociation>
+      <potentialOwner resourceRef="tns:Actor" >
+        <resourceAssignmentExpression>
+          <formalExpression>Operator</formalExpression>
+        </resourceAssignmentExpression>
+      </potentialOwner>
+    </userTask>
+    <userTask id="_5" name="Review and Dispatch Vehicle" g:x="30" g:y="256" g:width="198" g:height="48" implementation="humanTaskWebService" >
+      <ioSpecification>
+        <dataInput id="_5_CommentInput" name="Comment" />
+        <dataInput id="_5_TaskNameInput" name="TaskName" />
+        <inputSet>
+          <dataInputRefs>_5_CommentInput</dataInputRefs>
+          <dataInputRefs>_5_TaskNameInput</dataInputRefs>
+        </inputSet>
+        <outputSet>
+        </outputSet>
+      </ioSpecification>
+      <property id="_5_Comment" />
+      <property id="_5_TaskName" />
+      <dataInputAssociation>
+        <assignment>
+          <from xs:type="tFormalExpression">en-UK</from>
+          <to xs:type="tFormalExpression">_5_CommentInput</to>
+        </assignment>
+        <sourceRef>_5_Comment</sourceRef>
+        <targetRef>_5_CommentInput</targetRef>
+      </dataInputAssociation>
+      <dataInputAssociation>
+        <assignment>
+          <from xs:type="tFormalExpression">ReviewAndDispatch</from>
+          <to xs:type="tFormalExpression">_5_TaskNameInput</to>
+        </assignment>
+        <sourceRef>_5_TaskName</sourceRef>
+        <targetRef>_5_TaskNameInput</targetRef>
+      </dataInputAssociation>
+      <potentialOwner resourceRef="tns:Actor" >
+        <resourceAssignmentExpression>
+          <formalExpression>dispatcher</formalExpression>
+        </resourceAssignmentExpression>
+      </potentialOwner>
+    </userTask>
+    <businessRuleTask id="_6" name="Select Emergency Vehicle" g:x="52" g:y="176" g:width="155" g:height="48" g:ruleFlowGroup="suggest_emergency_vehicle" />
+
+    <!-- connections -->
+    <sequenceFlow sourceRef="_5" targetRef="_3" />
+    <sequenceFlow sourceRef="_1" targetRef="_4" />
+    <sequenceFlow sourceRef="_6" targetRef="_5" />
+    <sequenceFlow sourceRef="_4" targetRef="_6" />
+
+  </process>
+
+</definitions>
