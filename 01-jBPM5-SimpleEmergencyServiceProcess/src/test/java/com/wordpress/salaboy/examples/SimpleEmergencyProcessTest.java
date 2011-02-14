@@ -1,5 +1,6 @@
 package com.wordpress.salaboy.examples;
 
+import com.wordpress.salaboy.example.model.Emergency;
 import org.drools.KnowledgeBase;
 import org.drools.KnowledgeBaseFactory;
 import org.drools.builder.*;
@@ -11,6 +12,7 @@ import org.drools.runtime.process.*;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -146,7 +148,56 @@ public class SimpleEmergencyProcessTest {
         Assert.assertEquals(ProcessInstance.STATE_COMPLETED, process.getState());
     }
 
+    @Test
+    public void emergencyServiceWithInputDataTest() throws InterruptedException {
+        KnowledgeBuilder kbuilder = KnowledgeBuilderFactory.newKnowledgeBuilder();
+                kbuilder.add(new ClassPathResource("EmergencyServiceSimple.bpmn"), ResourceType.BPMN2);
+                KnowledgeBuilderErrors errors= kbuilder.getErrors();
+                if(errors.size() > 0){
+                   for(KnowledgeBuilderError error : errors){
+                     System.out.println(error.getMessage());
 
+                   }
+                   return;
+                }
+
+                KnowledgeBase kbase = KnowledgeBaseFactory.newKnowledgeBase();
+                kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+
+
+                ksession = kbase.newStatefulKnowledgeSession();
+                MyHumanActivityAutomaticSimulatorWorkItemHandler humanActivitiesSimHandler = new MyHumanActivityAutomaticSimulatorWorkItemHandler();
+                ksession.getWorkItemManager().registerWorkItemHandler("Human Task", humanActivitiesSimHandler );
+
+                KnowledgeRuntimeLoggerFactory.newConsoleLogger(ksession);
+
+         //Setting the process engine and the rule engine in reactive mode
+        // This will cause that if a rule is activated, the rule will fire without waiting
+        // the user to call the fireAllRules() method.
+        new Thread(new Runnable()       {
+
+            public void run() {
+                ksession.fireUntilHalt();
+            }
+        }).start();
+
+            Map<String, Object> parameters = new HashMap<String, Object>();
+            parameters.put("emergency", new Emergency());
+
+
+            WorkflowProcessInstance process = (WorkflowProcessInstance) ksession.startProcess("com.wordpress.salaboy.bpmn2.SimpleEmergencyService", parameters );
+
+         Thread.sleep(1000);
+
+        Assert.assertEquals(ProcessInstance.STATE_COMPLETED, process.getState());
+
+    }
+
+    @Test
+    public void  emergencyServiceWithRulesTest(){
+
+
+    }
 
 
 
