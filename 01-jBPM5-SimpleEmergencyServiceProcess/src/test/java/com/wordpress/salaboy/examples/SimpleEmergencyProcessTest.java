@@ -6,11 +6,9 @@ import org.drools.builder.*;
 import org.drools.io.impl.ClassPathResource;
 import org.drools.logger.KnowledgeRuntimeLoggerFactory;
 import org.drools.runtime.StatefulKnowledgeSession;
-import org.drools.runtime.process.ProcessInstance;
-import org.drools.runtime.process.WorkItem;
-import org.drools.runtime.process.WorkItemHandler;
-import org.drools.runtime.process.WorkItemManager;
+import org.drools.runtime.process.*;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.Map;
@@ -69,7 +67,11 @@ public class SimpleEmergencyProcessTest {
             }
         }).start();
 
-        ProcessInstance process = ksession.startProcess("com.wordpress.salaboy.bpmn2.SimpleEmergencyService");
+        WorkflowProcessInstance process = (WorkflowProcessInstance) ksession.startProcess("com.wordpress.salaboy.bpmn2.SimpleEmergencyService");
+
+        Thread.sleep(1000);
+
+        Assert.assertEquals(ProcessInstance.STATE_COMPLETED, process.getState());
 
 
 
@@ -117,21 +119,34 @@ public class SimpleEmergencyProcessTest {
             }
         }).start();
 
-        ksession.startProcess("com.wordpress.salaboy.bpmn2.SimpleEmergencyService");
+        WorkflowProcessInstance process = (WorkflowProcessInstance) ksession.startProcess("com.wordpress.salaboy.bpmn2.SimpleEmergencyService");
 
+
+        Assert.assertEquals(ProcessInstance.STATE_ACTIVE, process.getState());
+
+        Assert.assertEquals(1, process.getNodeInstances().size());
+        Assert.assertEquals("Ask for Emergency Information", process.getNodeInstances().iterator().next().getNodeName());
         System.out.println("Completing the first Activity");
         //Complete the first human activity
         humanActivitiesSimHandler.completeWorkItem(null);
+        Assert.assertEquals(ProcessInstance.STATE_ACTIVE, process.getState());
 
-        Thread.sleep(3000);
+        Thread.sleep(1000);
         System.out.println("Completing the second Activity");
         //Complete the second human activity
-
-        Thread.sleep(3000);
+         Assert.assertEquals(ProcessInstance.STATE_ACTIVE, process.getState());
+        Thread.sleep(1000);
+        Assert.assertEquals(1, process.getNodeInstances().size());
+        Assert.assertEquals("Dispatch Ambulance", process.getNodeInstances().iterator().next().getNodeName());
         humanActivitiesSimHandler.completeWorkItem(null);
 
-        Thread.sleep(3000);
+
+        Thread.sleep(1000);
+
+        Assert.assertEquals(ProcessInstance.STATE_COMPLETED, process.getState());
     }
+
+
 
 
 
