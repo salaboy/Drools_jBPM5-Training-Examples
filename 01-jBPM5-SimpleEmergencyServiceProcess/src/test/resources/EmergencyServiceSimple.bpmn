@@ -105,14 +105,16 @@
             <ioSpecification>
 
                 <dataInput id="_4_emergencyInput" name="emergency"/>
+                <dataInput id="_4_ambulanceInput" name="ambulance"/>
                 <dataInput id="_4_CommentInput" name="Comment"/>
                 <dataInput id="_4_SkippableInput" name="Skippable"/>
                 <dataInput id="_4_ContentInput" name="Content"/>
                 <dataInput id="_4_TaskNameInput" name="TaskName"/>
                 <dataInput id="_4_PriorityInput" name="Priority"/>
                 <dataOutput id="_4_emergencyOutput" name="emergency"/>
-                <inputSet>
 
+                <inputSet>
+                    <dataInputRefs>_4_ambulanceInput</dataInputRefs>
                     <dataInputRefs>_4_emergencyInput</dataInputRefs>
                     <dataInputRefs>_4_CommentInput</dataInputRefs>
                     <dataInputRefs>_4_SkippableInput</dataInputRefs>
@@ -122,8 +124,13 @@
                 </inputSet>
                 <outputSet>
                     <dataOutputRefs>_4_emergencyOutput</dataOutputRefs>
+
                 </outputSet>
             </ioSpecification>
+            <dataInputAssociation>
+                <sourceRef>ambulance</sourceRef>
+                <targetRef>_4_ambulanceInput</targetRef>
+            </dataInputAssociation>
             <dataInputAssociation>
                 <sourceRef>emergency</sourceRef>
                 <targetRef>_4_emergencyInput</targetRef>
@@ -164,9 +171,10 @@
                 </assignment>
             </dataInputAssociation>
             <dataOutputAssociation>
-                <sourceRef>_2_emergencyOutput</sourceRef>
+                <sourceRef>_4_emergencyOutput</sourceRef>
                 <targetRef>emergency</targetRef>
             </dataOutputAssociation>
+
 
             <potentialOwner>
                 <resourceAssignmentExpression>
@@ -175,8 +183,16 @@
             </potentialOwner>
         </userTask>
 
+        <scriptTask id="_5" name="Report" scriptFormat="http://www.java.com/java">
+            <script>
+                  System.out.println("Reporting: ");
+                  org.drools.runtime.process.WorkflowProcessInstance process = (org.drools.runtime.process.WorkflowProcessInstance)kcontext.getProcessInstance();
+                  System.out.println("Ambulance: "+process.getVariable("ambulance"));
+                  System.out.println("Emergency: "+process.getVariable("emergency"));
+            </script>
+        </scriptTask>
 
-        <endEvent id="_5" name="EndProcess">
+        <endEvent id="_6" name="EndProcess">
             <terminateEventDefinition/>
         </endEvent>
 
@@ -186,6 +202,7 @@
         <sequenceFlow id="_2-_3" sourceRef="_2" targetRef="_3"/>
         <sequenceFlow id="_3-_4" sourceRef="_3" targetRef="_4"/>
         <sequenceFlow id="_4-_5" sourceRef="_4" targetRef="_5"/>
+        <sequenceFlow id="_5-_6" sourceRef="_5" targetRef="_6"/>
 
 
     </process>

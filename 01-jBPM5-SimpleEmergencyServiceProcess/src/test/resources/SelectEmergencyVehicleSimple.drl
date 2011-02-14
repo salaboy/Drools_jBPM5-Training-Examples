@@ -1,0 +1,17 @@
+package com.wordpress.salaboy.examples;
+
+import com.wordpress.salaboy.example.model.Ambulance;
+import com.wordpress.salaboy.example.model.Emergency;
+import org.drools.runtime.process.WorkflowProcessInstance;
+
+rule ""
+    when
+        $process: WorkflowProcessInstance()
+        Emergency(type == "Heart Attack") from $process.getVariable("emergency")
+
+    then
+        System.out.println("A new Ambuance is being created!");
+        Ambulance ambulance = new Ambulance("MyAmbulance");
+        $process.setVariable("ambulance", ambulance);
+        insert(ambulance);
+end

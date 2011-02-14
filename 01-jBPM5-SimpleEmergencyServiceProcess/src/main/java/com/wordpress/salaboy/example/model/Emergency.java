@@ -10,6 +10,8 @@ package com.wordpress.salaboy.example.model;
 public class Emergency {
     private int revision = 0 ;
     private String phoneCall;
+    private String type;
+
     public Emergency(String phoneCall) {
         this.phoneCall = phoneCall;
     }
@@ -24,5 +26,22 @@ public class Emergency {
 
     public int getRevision() {
         return revision;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    @Override
+    public String toString() {
+        return "Emergency{" +
+                "revision=" + revision +
+                ", phoneCall='" + phoneCall + '\'' +
+                ", type='" + type + '\'' +
+                '}';
     }
 }
