@@ -12,7 +12,7 @@
              xmlns:di="http://www.omg.org/spec/DD/20100524/DI"
              xmlns:tns="http://www.jboss.org/drools">
 
-    <itemDefinition id="_ambulanceItem" structureRef="com.wordpress.salaboy.example.model.Ambulance"/>
+    <itemDefinition id="_vehicleItem" structureRef="com.wordpress.salaboy.example.model.Vehicle"/>
     <itemDefinition id="_emergencyItem" structureRef="com.wordpress.salaboy.example.model.Emergency"/>
 
 
@@ -20,7 +20,7 @@
              name="Emergency Service Main Process">
 
         <!-- process variables -->
-        <property id="ambulance" itemSubjectRef="_ambulanceItem"/>
+        <property id="vehicle" itemSubjectRef="_vehicleItem"/>
         <property id="emergency" itemSubjectRef="_emergencyItem"/>
 
 
@@ -99,13 +99,13 @@
             </potentialOwner>
         </userTask>
 
-        <businessRuleTask id="_3" name="Select Ambulance" g:ruleFlowGroup="select_ambulance"/>
+        <businessRuleTask id="_3" name="Select Vehicle" g:ruleFlowGroup="select_vehicle"/>
 
-        <userTask id="_4" name="Dispatch Ambulance">
+        <userTask id="_4" name="Dispatch Vehicle">
             <ioSpecification>
 
                 <dataInput id="_4_emergencyInput" name="emergency"/>
-                <dataInput id="_4_ambulanceInput" name="ambulance"/>
+                <dataInput id="_4_vehicleInput" name="vehicle"/>
                 <dataInput id="_4_CommentInput" name="Comment"/>
                 <dataInput id="_4_SkippableInput" name="Skippable"/>
                 <dataInput id="_4_ContentInput" name="Content"/>
@@ -114,7 +114,7 @@
                 <dataOutput id="_4_emergencyOutput" name="emergency"/>
 
                 <inputSet>
-                    <dataInputRefs>_4_ambulanceInput</dataInputRefs>
+                    <dataInputRefs>_4_vehicleInput</dataInputRefs>
                     <dataInputRefs>_4_emergencyInput</dataInputRefs>
                     <dataInputRefs>_4_CommentInput</dataInputRefs>
                     <dataInputRefs>_4_SkippableInput</dataInputRefs>
@@ -128,8 +128,8 @@
                 </outputSet>
             </ioSpecification>
             <dataInputAssociation>
-                <sourceRef>ambulance</sourceRef>
-                <targetRef>_4_ambulanceInput</targetRef>
+                <sourceRef>vehicle</sourceRef>
+                <targetRef>_4_vehicleInput</targetRef>
             </dataInputAssociation>
             <dataInputAssociation>
                 <sourceRef>emergency</sourceRef>
@@ -159,7 +159,7 @@
             <dataInputAssociation>
                 <targetRef>_4_TaskNameInput</targetRef>
                 <assignment>
-                    <from xs:type="tFormalExpression">Dispatch Ambulance</from>
+                    <from xs:type="tFormalExpression">Dispatch Vehicle</from>
                     <to xs:type="tFormalExpression">_4_TaskNameInput</to>
                 </assignment>
             </dataInputAssociation>
@@ -187,7 +187,7 @@
             <script>
                   System.out.println("Reporting: ");
                   org.drools.runtime.process.WorkflowProcessInstance process = (org.drools.runtime.process.WorkflowProcessInstance)kcontext.getProcessInstance();
-                  System.out.println("Ambulance: "+process.getVariable("ambulance"));
+                  System.out.println("Vehicle: "+process.getVariable("vehicle"));
                   System.out.println("Emergency: "+process.getVariable("emergency"));
             </script>
         </scriptTask>

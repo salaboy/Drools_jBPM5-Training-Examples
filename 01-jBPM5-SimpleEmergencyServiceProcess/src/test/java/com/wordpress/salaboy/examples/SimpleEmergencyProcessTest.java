@@ -136,7 +136,7 @@ public class SimpleEmergencyProcessTest {
         Assert.assertEquals(ProcessInstance.STATE_ACTIVE, process.getState());
         Thread.sleep(1000);
         Assert.assertEquals(1, process.getNodeInstances().size());
-        Assert.assertEquals("Dispatch Ambulance", process.getNodeInstances().iterator().next().getNodeName());
+        Assert.assertEquals("Dispatch Vehicle", process.getNodeInstances().iterator().next().getNodeName());
         humanActivitiesSimHandler.completeWorkItem(null);
 
 
@@ -188,7 +188,7 @@ public class SimpleEmergencyProcessTest {
 
         Assert.assertEquals(1, process.getNodeInstances().size());
         Assert.assertEquals("Ask for Emergency Information", process.getNodeInstances().iterator().next().getNodeName());
-        Assert.assertEquals(1, ((Emergency)process.getVariable("emergency")).getRevision());
+        Assert.assertEquals(1, ((Emergency) process.getVariable("emergency")).getRevision());
         System.out.println("Completing the first Activity");
         //Complete the first human activity
         humanActivitiesSimHandler.completeWorkItem();
@@ -200,8 +200,8 @@ public class SimpleEmergencyProcessTest {
         Assert.assertEquals(ProcessInstance.STATE_ACTIVE, process.getState());
         Thread.sleep(1000);
         Assert.assertEquals(1, process.getNodeInstances().size());
-        Assert.assertEquals("Dispatch Ambulance", process.getNodeInstances().iterator().next().getNodeName());
-        Assert.assertEquals(2, ((Emergency)process.getVariable("emergency")).getRevision());
+        Assert.assertEquals("Dispatch Vehicle", process.getNodeInstances().iterator().next().getNodeName());
+        Assert.assertEquals(2, ((Emergency) process.getVariable("emergency")).getRevision());
         humanActivitiesSimHandler.completeWorkItem();
 
 
@@ -232,7 +232,7 @@ public class SimpleEmergencyProcessTest {
 
         KnowledgeRuntimeLoggerFactory.newConsoleLogger(ksession);
 
-  //Setting the process engine and the rule engine in reactive mode
+        //Setting the process engine and the rule engine in reactive mode
         // This will cause that if a rule is activated, the rule will fire without waiting
         // the user to call the fireAllRules() method.
         new Thread(new Runnable() {
@@ -251,11 +251,11 @@ public class SimpleEmergencyProcessTest {
         ksession.insert(emergency);
         ksession.insert(process);
 
-         Assert.assertEquals(ProcessInstance.STATE_ACTIVE, process.getState());
+        Assert.assertEquals(ProcessInstance.STATE_ACTIVE, process.getState());
 
         Assert.assertEquals(1, process.getNodeInstances().size());
         Assert.assertEquals("Ask for Emergency Information", process.getNodeInstances().iterator().next().getNodeName());
-        Assert.assertEquals(1, ((Emergency)process.getVariable("emergency")).getRevision());
+        Assert.assertEquals(1, ((Emergency) process.getVariable("emergency")).getRevision());
         System.out.println("Completing the first Activity");
         //Complete the first human activity
         humanActivitiesSimHandler.completeWorkItem();
@@ -263,13 +263,82 @@ public class SimpleEmergencyProcessTest {
 
         Thread.sleep(1000);
 
-         System.out.println("Completing the second Activity");
+        System.out.println("Completing the second Activity");
         //Complete the second human activity
         Assert.assertEquals(ProcessInstance.STATE_ACTIVE, process.getState());
         Thread.sleep(1000);
         Assert.assertEquals(1, process.getNodeInstances().size());
-        Assert.assertEquals("Dispatch Ambulance", process.getNodeInstances().iterator().next().getNodeName());
-        Assert.assertEquals(2, ((Emergency)process.getVariable("emergency")).getRevision());
+        Assert.assertEquals("Dispatch Vehicle", process.getNodeInstances().iterator().next().getNodeName());
+        Assert.assertEquals(2, ((Emergency) process.getVariable("emergency")).getRevision());
+        humanActivitiesSimHandler.completeWorkItem();
+
+
+        Thread.sleep(1000);
+
+    }
+
+
+    @Test
+    public void emergencyServiceWithRulesNoReactiveTest() throws InterruptedException {
+        KnowledgeBuilder kbuilder = KnowledgeBuilderFactory.newKnowledgeBuilder();
+        kbuilder.add(new ClassPathResource("EmergencyServiceSimple.bpmn"), ResourceType.BPMN2);
+        kbuilder.add(new ClassPathResource("SelectEmergencyVehicleSimple.drl"), ResourceType.DRL);
+        KnowledgeBuilderErrors errors = kbuilder.getErrors();
+        if (errors.size() > 0) {
+            for (KnowledgeBuilderError error : errors) {
+                System.out.println(error.getMessage());
+
+            }
+            return;
+        }
+
+        KnowledgeBase kbase = KnowledgeBaseFactory.newKnowledgeBase();
+        kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+
+
+        ksession = kbase.newStatefulKnowledgeSession();
+        MyHumanActivitySimulatorChangeValuesWorkItemHandler humanActivitiesSimHandler = new MyHumanActivitySimulatorChangeValuesWorkItemHandler();
+        ksession.getWorkItemManager().registerWorkItemHandler("Human Task", humanActivitiesSimHandler);
+
+        KnowledgeRuntimeLoggerFactory.newConsoleLogger(ksession);
+
+
+        Emergency emergency = new Emergency("555-1234");
+        //Run with Heart Attack and check the output. An Ambulance must appear in the report
+        //emergency.setType("Heart Attack");
+        //Run with Fire and check the output. A FireTruck must appear in the report
+        emergency.setType("Fire");
+        Map<String, Object> parameters = new HashMap<String, Object>();
+        parameters.put("emergency", emergency);
+
+
+        WorkflowProcessInstance process = (WorkflowProcessInstance) ksession.startProcess("com.wordpress.salaboy.bpmn2.SimpleEmergencyService", parameters);
+        ksession.insert(emergency);
+        ksession.insert(process);
+
+        Assert.assertEquals(ProcessInstance.STATE_ACTIVE, process.getState());
+
+        Assert.assertEquals(1, process.getNodeInstances().size());
+        Assert.assertEquals("Ask for Emergency Information", process.getNodeInstances().iterator().next().getNodeName());
+        Assert.assertEquals(1, ((Emergency) process.getVariable("emergency")).getRevision());
+        System.out.println("Completing the first Activity");
+        //Complete the first human activity
+        humanActivitiesSimHandler.completeWorkItem();
+        Assert.assertEquals(ProcessInstance.STATE_ACTIVE, process.getState());
+
+        Thread.sleep(1000);
+        // At this point we need to fireAllRules() that were activated
+        int fired = ksession.fireAllRules();
+        Assert.assertEquals(1, fired);
+        Thread.sleep(1000);
+
+        System.out.println("Completing the second Activity");
+        //Complete the second human activity
+        Assert.assertEquals(ProcessInstance.STATE_ACTIVE, process.getState());
+        Thread.sleep(1000);
+        Assert.assertEquals(1, process.getNodeInstances().size());
+        Assert.assertEquals("Dispatch Vehicle", process.getNodeInstances().iterator().next().getNodeName());
+        Assert.assertEquals(2, ((Emergency) process.getVariable("emergency")).getRevision());
         humanActivitiesSimHandler.completeWorkItem();
 
 
@@ -308,12 +377,12 @@ class MyHumanActivitySimulatorChangeValuesWorkItemHandler implements WorkItemHan
     private long workItemId;
     private Map<String, Object> results;
     private Emergency currentEmergency;
+
     public void executeWorkItem(WorkItem workItem, WorkItemManager workItemManager) {
-         this.workItemId = workItem.getId();
+        this.workItemId = workItem.getId();
         this.workItemManager = workItemManager;
         currentEmergency = (Emergency) workItem.getParameter("emergency");
         currentEmergency.setRevision(currentEmergency.getRevision() + counter);
-
 
 
     }

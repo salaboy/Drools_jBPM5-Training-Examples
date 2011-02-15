@@ -8,4 +8,6 @@ package com.wordpress.salaboy.example.model;
  * To change this template use File | Settings | File Templates.
  */
 public interface Vehicle {
+    public String getType();
+
 }

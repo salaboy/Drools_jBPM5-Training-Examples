@@ -31,4 +31,8 @@ public class Ambulance implements Vehicle{
                 ", name='" + name + '\'' +
                 '}';
     }
+
+    public String getType() {
+        return "Ambulance";
+    }
 }

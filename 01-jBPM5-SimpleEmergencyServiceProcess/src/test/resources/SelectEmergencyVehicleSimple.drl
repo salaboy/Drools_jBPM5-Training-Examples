@@ -1,10 +1,13 @@
 package com.wordpress.salaboy.examples;
 
 import com.wordpress.salaboy.example.model.Ambulance;
+import com.wordpress.salaboy.example.model.Vehicle;
+import com.wordpress.salaboy.example.model.FireTruck;
 import com.wordpress.salaboy.example.model.Emergency;
 import org.drools.runtime.process.WorkflowProcessInstance;
 
-rule ""
+rule "New Ambulance for Heart Attack Emergencies"
+    ruleflow-group "select_vehicle"
     when
         $process: WorkflowProcessInstance()
         Emergency(type == "Heart Attack") from $process.getVariable("emergency")
@@ -12,6 +15,19 @@ rule ""
     then
         System.out.println("A new Ambuance is being created!");
         Ambulance ambulance = new Ambulance("MyAmbulance");
-        $process.setVariable("ambulance", ambulance);
+        $process.setVariable("vehicle", ambulance);
         insert(ambulance);
+end
+
+rule "New Fire Truck for Fire Emergencies"
+    ruleflow-group "select_vehicle"
+    when
+        $process: WorkflowProcessInstance()
+        Emergency(type == "Fire") from $process.getVariable("emergency")
+
+    then
+        System.out.println("A new FireTruck is being created!");
+        FireTruck fireTruck = new FireTruck("MyFireTruck");
+        $process.setVariable("vehicle", fireTruck);
+        insert(fireTruck);
 end
