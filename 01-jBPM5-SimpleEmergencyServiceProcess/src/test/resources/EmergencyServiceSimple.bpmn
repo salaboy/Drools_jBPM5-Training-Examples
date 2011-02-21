@@ -37,6 +37,7 @@
                 <dataInput id="_2_PriorityInput" name="Priority"/>
                 <dataOutput id="_2_emergencyOutput" name="emergency"/>
                 <inputSet>
+                    <dataInputRefs>_2_emergencyInput</dataInputRefs>
                     <dataInputRefs>_2_CommentInput</dataInputRefs>
                     <dataInputRefs>_2_SkippableInput</dataInputRefs>
                     <dataInputRefs>_2_ContentInput</dataInputRefs>

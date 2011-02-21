@@ -1,6 +1,9 @@
 package com.wordpress.salaboy.examples;
 
+import com.wordpress.salaboy.example.model.Ambulance;
 import com.wordpress.salaboy.example.model.Emergency;
+import com.wordpress.salaboy.example.model.FireTruck;
+import com.wordpress.salaboy.example.model.Vehicle;
 import org.drools.KnowledgeBase;
 import org.drools.KnowledgeBaseFactory;
 import org.drools.builder.*;
@@ -36,7 +39,7 @@ public class SimpleEmergencyProcessTest {
      * automatically completes the task causing the process to advance to the next activity.
      */
     @Test
-    public void emergencyServiceAutomaticHumanTasksTest() throws InterruptedException {
+    public void automaticHumanTasksTest() throws InterruptedException {
         KnowledgeBuilder kbuilder = KnowledgeBuilderFactory.newKnowledgeBuilder();
         kbuilder.add(new ClassPathResource("EmergencyServiceSimple.bpmn"), ResourceType.BPMN2);
         KnowledgeBuilderErrors errors = kbuilder.getErrors();
@@ -53,25 +56,17 @@ public class SimpleEmergencyProcessTest {
 
 
         ksession = kbase.newStatefulKnowledgeSession();
-        MyHumanActivityAutomaticSimulatorWorkItemHandler humanActivitiesSimHandler = new MyHumanActivityAutomaticSimulatorWorkItemHandler();
+        MyAutomaticHumanSimulatorWorkItemHandler humanActivitiesSimHandler = new MyAutomaticHumanSimulatorWorkItemHandler();
         ksession.getWorkItemManager().registerWorkItemHandler("Human Task", humanActivitiesSimHandler);
 
         KnowledgeRuntimeLoggerFactory.newConsoleLogger(ksession);
-
-        //Setting the process engine and the rule engine in reactive mode
-        // This will cause that if a rule is activated, the rule will fire without waiting
-        // the user to call the fireAllRules() method.
-        new Thread(new Runnable() {
-
-            public void run() {
-                ksession.fireUntilHalt();
-            }
-        }).start();
-
+ 
         WorkflowProcessInstance process = (WorkflowProcessInstance) ksession.startProcess("com.wordpress.salaboy.bpmn2.SimpleEmergencyService");
 
-        Thread.sleep(1000);
-
+        //I need to call the FireAllRules method because I have a RuleTask in my business process
+        ksession.fireAllRules();
+        
+        // Is the process completed?
         Assert.assertEquals(ProcessInstance.STATE_COMPLETED, process.getState());
 
 
@@ -86,7 +81,7 @@ public class SimpleEmergencyProcessTest {
      * automatically completes the task causing the process to advance to the next activity.
      */
     @Test
-    public void emergencyServiceNonAutomaticHumanTasksTest() throws InterruptedException {
+    public void nonAutomaticHumanTasksTest() throws InterruptedException {
         KnowledgeBuilder kbuilder = KnowledgeBuilderFactory.newKnowledgeBuilder();
         kbuilder.add(new ClassPathResource("EmergencyServiceSimple.bpmn"), ResourceType.BPMN2);
         KnowledgeBuilderErrors errors = kbuilder.getErrors();
@@ -101,52 +96,47 @@ public class SimpleEmergencyProcessTest {
         KnowledgeBase kbase = KnowledgeBaseFactory.newKnowledgeBase();
         kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
 
-
         ksession = kbase.newStatefulKnowledgeSession();
-        MyHumanActivityNonAutomaticSimulatorWorkItemHandler humanActivitiesSimHandler = new MyHumanActivityNonAutomaticSimulatorWorkItemHandler();
+        MyNonAutomaticHumanSimulatorWorkItemHandler humanActivitiesSimHandler = new MyNonAutomaticHumanSimulatorWorkItemHandler();
         ksession.getWorkItemManager().registerWorkItemHandler("Human Task", humanActivitiesSimHandler);
 
         KnowledgeRuntimeLoggerFactory.newConsoleLogger(ksession);
 
-        //Setting the process engine and the rule engine in reactive mode
-        // This will cause that if a rule is activated, the rule will fire without waiting
-        // the user to call the fireAllRules() method.
-        new Thread(new Runnable() {
-
-            public void run() {
-                ksession.fireUntilHalt();
-            }
-        }).start();
-
         WorkflowProcessInstance process = (WorkflowProcessInstance) ksession.startProcess("com.wordpress.salaboy.bpmn2.SimpleEmergencyService");
 
-
+        // Is the Process still Active?
         Assert.assertEquals(ProcessInstance.STATE_ACTIVE, process.getState());
-
+        // Is there a running node instance?
         Assert.assertEquals(1, process.getNodeInstances().size());
+        // Is the process stopped in the "Ask for Emergency Information" activity?
         Assert.assertEquals("Ask for Emergency Information", process.getNodeInstances().iterator().next().getNodeName());
-        System.out.println("Completing the first Activity");
+        
+        System.out.println("Completing the first Activity !");
         //Complete the first human activity
         humanActivitiesSimHandler.completeWorkItem(null);
+        
+        // Is the Process still Active?
         Assert.assertEquals(ProcessInstance.STATE_ACTIVE, process.getState());
 
-        Thread.sleep(1000);
+        //I need to call the FireAllRules method because I have a RuleTask inside the business process
+        ksession.fireAllRules();
+        
         System.out.println("Completing the second Activity");
-        //Complete the second human activity
+        // Is the Process still Active?
         Assert.assertEquals(ProcessInstance.STATE_ACTIVE, process.getState());
-        Thread.sleep(1000);
+        // Is there a running node instance?
         Assert.assertEquals(1, process.getNodeInstances().size());
+        // Is the process stopped in the "Dispatch Vehicle" activity?
         Assert.assertEquals("Dispatch Vehicle", process.getNodeInstances().iterator().next().getNodeName());
+        //Complete the second human activity
         humanActivitiesSimHandler.completeWorkItem(null);
 
-
-        Thread.sleep(1000);
-
+        // Is the process completed?
         Assert.assertEquals(ProcessInstance.STATE_COMPLETED, process.getState());
     }
 
     @Test
-    public void emergencyServiceWithInputDataTest() throws InterruptedException {
+    public void inputDataTest() throws InterruptedException {
         KnowledgeBuilder kbuilder = KnowledgeBuilderFactory.newKnowledgeBuilder();
         kbuilder.add(new ClassPathResource("EmergencyServiceSimple.bpmn"), ResourceType.BPMN2);
         KnowledgeBuilderErrors errors = kbuilder.getErrors();
@@ -163,20 +153,11 @@ public class SimpleEmergencyProcessTest {
 
 
         ksession = kbase.newStatefulKnowledgeSession();
-        MyHumanActivitySimulatorChangeValuesWorkItemHandler humanActivitiesSimHandler = new MyHumanActivitySimulatorChangeValuesWorkItemHandler();
+        MyHumanChangingValuesSimulatorWorkItemHandler humanActivitiesSimHandler = new MyHumanChangingValuesSimulatorWorkItemHandler();
         ksession.getWorkItemManager().registerWorkItemHandler("Human Task", humanActivitiesSimHandler);
 
         KnowledgeRuntimeLoggerFactory.newConsoleLogger(ksession);
 
-        //Setting the process engine and the rule engine in reactive mode
-        // This will cause that if a rule is activated, the rule will fire without waiting
-        // the user to call the fireAllRules() method.
-        new Thread(new Runnable() {
-
-            public void run() {
-                ksession.fireUntilHalt();
-            }
-        }).start();
 
         Map<String, Object> parameters = new HashMap<String, Object>();
         parameters.put("emergency", new Emergency("555-1234"));
@@ -184,32 +165,47 @@ public class SimpleEmergencyProcessTest {
 
         WorkflowProcessInstance process = (WorkflowProcessInstance) ksession.startProcess("com.wordpress.salaboy.bpmn2.SimpleEmergencyService", parameters);
 
+        // Is the Process still Active?
         Assert.assertEquals(ProcessInstance.STATE_ACTIVE, process.getState());
-
+        // Is there a running node instance?
         Assert.assertEquals(1, process.getNodeInstances().size());
+        // Is the process stopped in the "Ask for Emergency Information" activity?
         Assert.assertEquals("Ask for Emergency Information", process.getNodeInstances().iterator().next().getNodeName());
+        // Lets check the value of the emergency.getRevision(), it should be 1 
         Assert.assertEquals(1, ((Emergency) process.getVariable("emergency")).getRevision());
-        System.out.println("Completing the first Activity");
+        
+        
         //Complete the first human activity
+        System.out.println("Completing the first Activity");
         humanActivitiesSimHandler.completeWorkItem();
+        
+        // Is the Process still Active?
         Assert.assertEquals(ProcessInstance.STATE_ACTIVE, process.getState());
-
-        Thread.sleep(1000);
+        
+        //I need to call the FireAllRules method because I have a RuleTask inside the business process
+        ksession.fireAllRules();
+        
+        
+        // Is the Process still Active?
+        Assert.assertEquals(ProcessInstance.STATE_ACTIVE, process.getState());
+        // Is there a running node instance?
+        Assert.assertEquals(1, process.getNodeInstances().size());
+        // Is the process stopped in the "Dispatch Vehicle" activity?
+        Assert.assertEquals("Dispatch Vehicle", process.getNodeInstances().iterator().next().getNodeName());
+        // Lets check the value of the emergency.getRevision(), it should be 2, because the work item handler changes it 
+        Assert.assertEquals(2, ((Emergency) process.getVariable("emergency")).getRevision());
+        
         System.out.println("Completing the second Activity");
         //Complete the second human activity
-        Assert.assertEquals(ProcessInstance.STATE_ACTIVE, process.getState());
-        Thread.sleep(1000);
-        Assert.assertEquals(1, process.getNodeInstances().size());
-        Assert.assertEquals("Dispatch Vehicle", process.getNodeInstances().iterator().next().getNodeName());
-        Assert.assertEquals(2, ((Emergency) process.getVariable("emergency")).getRevision());
         humanActivitiesSimHandler.completeWorkItem();
 
-
-        Thread.sleep(1000);
+        // Is the process completed?
+        Assert.assertEquals(ProcessInstance.STATE_COMPLETED, process.getState());
+        
     }
 
     @Test
-    public void emergencyServiceWithRulesTest() throws InterruptedException {
+    public void emergencyWithRulesTest() throws InterruptedException {
         KnowledgeBuilder kbuilder = KnowledgeBuilderFactory.newKnowledgeBuilder();
         kbuilder.add(new ClassPathResource("EmergencyServiceSimple.bpmn"), ResourceType.BPMN2);
         kbuilder.add(new ClassPathResource("SelectEmergencyVehicleSimple.drl"), ResourceType.DRL);
@@ -227,11 +223,91 @@ public class SimpleEmergencyProcessTest {
 
 
         ksession = kbase.newStatefulKnowledgeSession();
-        MyHumanActivitySimulatorChangeValuesWorkItemHandler humanActivitiesSimHandler = new MyHumanActivitySimulatorChangeValuesWorkItemHandler();
+        MyHumanChangingValuesSimulatorWorkItemHandler humanActivitiesSimHandler = new MyHumanChangingValuesSimulatorWorkItemHandler();
         ksession.getWorkItemManager().registerWorkItemHandler("Human Task", humanActivitiesSimHandler);
 
         KnowledgeRuntimeLoggerFactory.newConsoleLogger(ksession);
 
+       
+        Emergency emergency = new Emergency("555-1234");
+        emergency.setType("Heart Attack");
+        Map<String, Object> parameters = new HashMap<String, Object>();
+        parameters.put("emergency", emergency);
+
+
+        WorkflowProcessInstance process = (WorkflowProcessInstance) ksession
+                                            .startProcess("com.wordpress.salaboy.bpmn2.SimpleEmergencyService", parameters);
+        // My Emergency and My Process are both inserted as Facts / Truths in my Knowledge Session
+        // Now Emergency and the Process Instance can be used by the inference engine
+        ksession.insert(emergency);
+        ksession.insert(process);
+        
+        // Is the Process still Active?
+        Assert.assertEquals(ProcessInstance.STATE_ACTIVE, process.getState());
+        // Is there a running node instance?
+        Assert.assertEquals(1, process.getNodeInstances().size());
+        // Is the process stopped in the "Ask for Emergency Information" activity?
+        Assert.assertEquals("Ask for Emergency Information", process.getNodeInstances().iterator().next().getNodeName());
+        // Lets check the value of the emergency.getRevision(), it should be 1 
+        Assert.assertEquals(1, ((Emergency) process.getVariable("emergency")).getRevision());
+        
+        System.out.println("Completing the first Activity");
+        //Complete the first human activity
+        humanActivitiesSimHandler.completeWorkItem();
+        // Is the Process still Active?
+        Assert.assertEquals(ProcessInstance.STATE_ACTIVE, process.getState());
+        
+        //I need to call the FireAllRules method because I have a RuleTask inside the business process
+        int fired = ksession.fireAllRules();
+        // Now that I have rules being evaluated, at least one should fire
+        Assert.assertEquals(1, fired);
+        
+        
+        // Lets check the value of the vehicle variable it should be an Ambulance => Heart Attack 
+        Assert.assertTrue(((Vehicle) process.getVariable("vehicle")) instanceof Ambulance);
+        
+        
+        // Is the Process still Active?
+        Assert.assertEquals(ProcessInstance.STATE_ACTIVE, process.getState());
+        // Is there a running node instance?
+        Assert.assertEquals(1, process.getNodeInstances().size());
+        // Is the process stopped in the "Dispatch Vehicle" activity?
+        Assert.assertEquals("Dispatch Vehicle", process.getNodeInstances().iterator().next().getNodeName());
+        // Lets check the value of the emergency.getRevision(), it should be 1 
+        Assert.assertEquals(2, ((Emergency) process.getVariable("emergency")).getRevision());
+        
+        
+        
+        System.out.println("Completing the second Activity");
+        //Complete the second human activity
+        humanActivitiesSimHandler.completeWorkItem();
+        
+        // Is the process completed?
+        Assert.assertEquals(ProcessInstance.STATE_COMPLETED, process.getState());
+
+    }
+
+
+    @Test
+    public void reactiveProcessAndRulesTest() throws InterruptedException {
+        KnowledgeBuilder kbuilder = KnowledgeBuilderFactory.newKnowledgeBuilder();
+        kbuilder.add(new ClassPathResource("EmergencyServiceSimple.bpmn"), ResourceType.BPMN2);
+        kbuilder.add(new ClassPathResource("SelectEmergencyVehicleSimple.drl"), ResourceType.DRL);
+        KnowledgeBuilderErrors errors = kbuilder.getErrors();
+        if (errors.size() > 0) {
+            for (KnowledgeBuilderError error : errors) {
+                System.out.println(error.getMessage());
+
+            }
+            return;
+        }
+
+        KnowledgeBase kbase = KnowledgeBaseFactory.newKnowledgeBase();
+        kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
+
+
+        ksession = kbase.newStatefulKnowledgeSession();
+        
         //Setting the process engine and the rule engine in reactive mode
         // This will cause that if a rule is activated, the rule will fire without waiting
         // the user to call the fireAllRules() method.
@@ -241,63 +317,9 @@ public class SimpleEmergencyProcessTest {
                 ksession.fireUntilHalt();
             }
         }).start();
-        Emergency emergency = new Emergency("555-1234");
-        emergency.setType("Heart Attack");
-        Map<String, Object> parameters = new HashMap<String, Object>();
-        parameters.put("emergency", emergency);
-
-
-        WorkflowProcessInstance process = (WorkflowProcessInstance) ksession.startProcess("com.wordpress.salaboy.bpmn2.SimpleEmergencyService", parameters);
-        ksession.insert(emergency);
-        ksession.insert(process);
-
-        Assert.assertEquals(ProcessInstance.STATE_ACTIVE, process.getState());
-
-        Assert.assertEquals(1, process.getNodeInstances().size());
-        Assert.assertEquals("Ask for Emergency Information", process.getNodeInstances().iterator().next().getNodeName());
-        Assert.assertEquals(1, ((Emergency) process.getVariable("emergency")).getRevision());
-        System.out.println("Completing the first Activity");
-        //Complete the first human activity
-        humanActivitiesSimHandler.completeWorkItem();
-        Assert.assertEquals(ProcessInstance.STATE_ACTIVE, process.getState());
-
-        Thread.sleep(1000);
-
-        System.out.println("Completing the second Activity");
-        //Complete the second human activity
-        Assert.assertEquals(ProcessInstance.STATE_ACTIVE, process.getState());
-        Thread.sleep(1000);
-        Assert.assertEquals(1, process.getNodeInstances().size());
-        Assert.assertEquals("Dispatch Vehicle", process.getNodeInstances().iterator().next().getNodeName());
-        Assert.assertEquals(2, ((Emergency) process.getVariable("emergency")).getRevision());
-        humanActivitiesSimHandler.completeWorkItem();
-
-
-        Thread.sleep(1000);
-
-    }
-
-
-    @Test
-    public void emergencyServiceWithRulesNoReactiveTest() throws InterruptedException {
-        KnowledgeBuilder kbuilder = KnowledgeBuilderFactory.newKnowledgeBuilder();
-        kbuilder.add(new ClassPathResource("EmergencyServiceSimple.bpmn"), ResourceType.BPMN2);
-        kbuilder.add(new ClassPathResource("SelectEmergencyVehicleSimple.drl"), ResourceType.DRL);
-        KnowledgeBuilderErrors errors = kbuilder.getErrors();
-        if (errors.size() > 0) {
-            for (KnowledgeBuilderError error : errors) {
-                System.out.println(error.getMessage());
-
-            }
-            return;
-        }
-
-        KnowledgeBase kbase = KnowledgeBaseFactory.newKnowledgeBase();
-        kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
-
-
-        ksession = kbase.newStatefulKnowledgeSession();
-        MyHumanActivitySimulatorChangeValuesWorkItemHandler humanActivitiesSimHandler = new MyHumanActivitySimulatorChangeValuesWorkItemHandler();
+        
+        
+        MyHumanChangingValuesSimulatorWorkItemHandler humanActivitiesSimHandler = new MyHumanChangingValuesSimulatorWorkItemHandler();
         ksession.getWorkItemManager().registerWorkItemHandler("Human Task", humanActivitiesSimHandler);
 
         KnowledgeRuntimeLoggerFactory.newConsoleLogger(ksession);
@@ -312,44 +334,55 @@ public class SimpleEmergencyProcessTest {
         parameters.put("emergency", emergency);
 
 
-        WorkflowProcessInstance process = (WorkflowProcessInstance) ksession.startProcess("com.wordpress.salaboy.bpmn2.SimpleEmergencyService", parameters);
+        WorkflowProcessInstance process = (WorkflowProcessInstance) ksession
+                                            .startProcess("com.wordpress.salaboy.bpmn2.SimpleEmergencyService", parameters);
+        // My Emergency and My Process are both inserted as Facts / Truths in my Knowledge Session
+        // Now Emergency and the Process Instance can be used by the inference engine
         ksession.insert(emergency);
         ksession.insert(process);
-
+        
+        // Is the Process still Active?
         Assert.assertEquals(ProcessInstance.STATE_ACTIVE, process.getState());
-
+        // Is there a running node instance?
         Assert.assertEquals(1, process.getNodeInstances().size());
+        // Is the process stopped in the "Ask for Emergency Information" activity?
         Assert.assertEquals("Ask for Emergency Information", process.getNodeInstances().iterator().next().getNodeName());
+        // Lets check the value of the emergency.getRevision(), it should be 1 
         Assert.assertEquals(1, ((Emergency) process.getVariable("emergency")).getRevision());
+        
         System.out.println("Completing the first Activity");
         //Complete the first human activity
         humanActivitiesSimHandler.completeWorkItem();
+        
+        
+        // I need to sleep for a little while, because the other thread can be executing some activated rules
+        Thread.sleep(1000);
+        
+        // Lets check the value of the vehicle variable it should be a Fire Truck => Fire 
+        Assert.assertTrue(((Vehicle) process.getVariable("vehicle")) instanceof FireTruck);
+        
+        
+        // Is the Process still Active?
         Assert.assertEquals(ProcessInstance.STATE_ACTIVE, process.getState());
-
-        Thread.sleep(1000);
-        // At this point we need to fireAllRules() that were activated
-        int fired = ksession.fireAllRules();
-        Assert.assertEquals(1, fired);
-        Thread.sleep(1000);
-
+        // Is there a running node instance?
+        Assert.assertEquals(1, process.getNodeInstances().size());
+        // Is the process stopped in the "Dispatch Vehicle" activity?
+        Assert.assertEquals("Dispatch Vehicle", process.getNodeInstances().iterator().next().getNodeName());
+        // Lets check the value of the emergency.getRevision(), it should be 2
+        Assert.assertEquals(2, ((Emergency) process.getVariable("emergency")).getRevision());
+        
         System.out.println("Completing the second Activity");
         //Complete the second human activity
-        Assert.assertEquals(ProcessInstance.STATE_ACTIVE, process.getState());
-        Thread.sleep(1000);
-        Assert.assertEquals(1, process.getNodeInstances().size());
-        Assert.assertEquals("Dispatch Vehicle", process.getNodeInstances().iterator().next().getNodeName());
-        Assert.assertEquals(2, ((Emergency) process.getVariable("emergency")).getRevision());
         humanActivitiesSimHandler.completeWorkItem();
-
-
-        Thread.sleep(1000);
-
+        
+        // Is the process completed?
+        Assert.assertEquals(ProcessInstance.STATE_COMPLETED, process.getState());
     }
 
 
 }
 
-class MyHumanActivityNonAutomaticSimulatorWorkItemHandler implements WorkItemHandler {
+class MyNonAutomaticHumanSimulatorWorkItemHandler implements WorkItemHandler {
     private WorkItemManager workItemManager;
     private long workItemId;
 
@@ -371,7 +404,7 @@ class MyHumanActivityNonAutomaticSimulatorWorkItemHandler implements WorkItemHan
 }
 
 
-class MyHumanActivitySimulatorChangeValuesWorkItemHandler implements WorkItemHandler {
+class MyHumanChangingValuesSimulatorWorkItemHandler implements WorkItemHandler {
     private static int counter = 1;
     private WorkItemManager workItemManager;
     private long workItemId;
@@ -401,7 +434,7 @@ class MyHumanActivitySimulatorChangeValuesWorkItemHandler implements WorkItemHan
 
 }
 
-class MyHumanActivityAutomaticSimulatorWorkItemHandler implements WorkItemHandler {
+class MyAutomaticHumanSimulatorWorkItemHandler implements WorkItemHandler {
 
     public void executeWorkItem(WorkItem workItem, WorkItemManager workItemManager) {
         System.out.println("Map of Parameters = " + workItem.getParameters());
