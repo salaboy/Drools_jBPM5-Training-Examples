@@ -5,10 +5,10 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>jbpm5-community-training</groupId>
-    <artifactId>01-simple.emergency.service.example</artifactId>
+    <artifactId>02-emergency.service.workitems.example</artifactId>
     <version>1.0</version>
     <packaging>jar</packaging>
-    <name>jBPM5 Community Training :: 01 - Simple Emergency Service Example</name>
+    <name>jBPM5 Community Training :: 02 - Emergency Service Process and Work Items Examples</name>
 
     <dependencies>
         <dependency>
