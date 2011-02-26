@@ -1,0 +1,34 @@
+Drools and jBPM5 Community Training Course Example Projects
+
+In this repository you can find multiple examples and hands on labs related with the community training course of jBPM5 and Drools.
+You can find the slides for the different modules in:
+http://salaboy.wordpress.com/
+
+All the example projects where created using Maven and you can open them with your favorite IDE. 
+
+For building the projects you can, from the root directory run:
+mvn clean install
+
+
+jBPM5 Community Training Course
+
+jBPM5 Training Roadmap: http://salaboy.wordpress.com/2011/01/24/announcing-jbpm5-community-training/
+
+Module #1: jBPM5 Overview: http://salaboy.wordpress.com/2011/01/29/jbpm5-community-training-module-1-jbpm5-introduction/
+
+Module #2: The BPM Practice: http://salaboy.wordpress.com/2011/02/04/jbpm5-community-training-%E2%80%93-module-2-the-bpm-practice/
+
+Module #3: Delayed
+
+Module #4: jBPM5 APIs : http://salaboy.wordpress.com/2011/02/21/jbpm5-community-training-%E2%80%93-module-4-the-jbpm5-api-overview/
+
+The Example from these modules can be found inside the jbpm5/ directory of this repository.
+
+Drools Community Training Course:
+
+Drools Training Roadmap: 
+http://salaboy.wordpress.com/2011/02/23/drools-5-community-training-announced-roadmap/
+http://ilesteban.wordpress.com/2011/02/23/drools-expert-community-training-course/
+
+Authors:
+Twitter: @salaboy, @ilesteban
