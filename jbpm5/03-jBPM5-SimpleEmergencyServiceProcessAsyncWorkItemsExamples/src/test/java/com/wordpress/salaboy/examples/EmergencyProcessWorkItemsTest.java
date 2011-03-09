@@ -118,7 +118,7 @@ public class EmergencyProcessWorkItemsTest {
         //Start Tracking and Reporting are automatic -> Check the report in the console
         //We can also check against the tracking system itself
         Assert.assertEquals("Vehicle "+selectedVehicle.getId()+" Located at 5th and A Avenue"
-                                    , trackingSystem.queryTackingStatus(selectedVehicle.getId()));
+                                    , trackingSystem.queryVehicleStatus(selectedVehicle.getId()));
         
         
         // Is the process completed?
@@ -159,7 +159,8 @@ class StartVehicleTrackingMockSystem implements WorkItemHandler{
 interface VehicleTrackingSystem{
     public String startTacking(String vehicleId, String vehicleType);
     public void stopTacking(String vehicleId);
-    public String queryTackingStatus(String trackingId);
+    public String queryVehicleStatus(String trackingId);
+    public String queryVehicleTrackingId(String vehicleId);
 }
 
 class MyTrackingSystemMock implements VehicleTrackingSystem{
@@ -177,12 +178,16 @@ class MyTrackingSystemMock implements VehicleTrackingSystem{
         this.currentTrackingsById.remove(vehicleId);
     }
     
-    public String queryTackingStatus(String vehicleId){
+    public String queryVehicleStatus(String vehicleId){
         String trackingId = this.currentTrackingsByVehicleId.get(vehicleId);
         if(trackingId != null && !trackingId.equals("")){
             return "Vehicle "+vehicleId+" Located at 5th and A Avenue";
         }else{
             return "There is tracking for the vehicle with id = "+vehicleId;
         }
+    }
+
+    public String queryVehicleTrackingId(String vehicleId) {
+        return this.currentTrackingsByVehicleId.get(vehicleId);
     }
 }
