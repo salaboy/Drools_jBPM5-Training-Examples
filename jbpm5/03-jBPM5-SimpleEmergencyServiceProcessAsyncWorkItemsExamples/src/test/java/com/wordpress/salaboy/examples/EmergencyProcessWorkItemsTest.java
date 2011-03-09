@@ -56,7 +56,7 @@ public class EmergencyProcessWorkItemsTest {
         ksession.getWorkItemManager().registerWorkItemHandler("Human Task", humanActivitiesSimHandler);
         MyTrackingSystemMock trackingSystem = new MyTrackingSystemMock();
         StartVehicleTrackingMockSystem trackingSystemHandler = new StartVehicleTrackingMockSystem(trackingSystem);
-        ksession.getWorkItemManager().registerWorkItemHandler("StartTrackingSystem", trackingSystemHandler);
+        ksession.getWorkItemManager().registerWorkItemHandler("VehicleTrackingSystem", trackingSystemHandler);
 
         KnowledgeRuntimeLoggerFactory.newConsoleLogger(ksession);
 

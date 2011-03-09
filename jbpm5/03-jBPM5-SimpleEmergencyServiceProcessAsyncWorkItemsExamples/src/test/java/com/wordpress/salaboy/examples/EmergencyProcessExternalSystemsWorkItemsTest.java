@@ -5,7 +5,7 @@ import com.wordpress.salaboy.example.handlers.MyHumanChangingValuesSimulatorWork
 import com.wordpress.salaboy.example.model.Ambulance;
 import com.wordpress.salaboy.example.model.Emergency;
 import com.wordpress.salaboy.example.model.Vehicle;
-import com.wordpress.salaboy.example.persistence.ActiveWorkItemPersister;
+import com.wordpress.salaboy.example.persistence.ActiveWorkItemService;
 import com.wordpress.salaboy.example.persistence.TrackingJobInfo;
 import org.drools.KnowledgeBase;
 import org.drools.KnowledgeBaseFactory;
@@ -25,12 +25,12 @@ import org.junit.Before;
 /**
  * This test shows a more real scenario:
  * WorkItemHandler start a job in an External System (VehicleTrackingSystem) and
- * then uses another system (ActiveWorkItemPersister) to store the information 
+ * then uses another system (ActiveWorkItemService) to store the information 
  * of the execution.
  * At this point, the application running the process could fail. 
- * ActiveWorkItemPersister will store all the needed information to continue
+ * ActiveWorkItemService will store all the needed information to continue
  * the execution of the process when VehicleTrackingSystem ends. 
- * Because this is just a test, ActiveWorkItemPersister doesn't really support
+ * Because this is just a test, ActiveWorkItemService doesn't really support
  * a system crash because is sharing the same ksession with EmergencyProcessExternalSystemsWorkItemsTest.
  * 
  */
@@ -139,7 +139,10 @@ public class EmergencyProcessExternalSystemsWorkItemsTest {
         // Is the process completed? It shouldn't be because the External System didn't finish yet.
         Assert.assertEquals(ProcessInstance.STATE_ACTIVE, process.getState());
         
-        //Now complete the external system.
+        //Now complete the external system. We will wait a few seconds to 
+        //emulate the time needed by the VehicleTrackingSystem to complete the 
+        //job
+        Thread.sleep(2000);
         this.trackingSystem.stopTacking(this.trackingSystem.queryVehicleTrackingId(selectedVehicle.getId()));
         
         // Is the process completed now?
@@ -159,7 +162,7 @@ public class EmergencyProcessExternalSystemsWorkItemsTest {
 
     /**
      * Creates and configures a ksession. It set up all the needed handlers and
-     * logger. It also initialize the ActiveWorkItemPersister "system". 
+     * logger. It also initialize the ActiveWorkItemService "system". 
      * Successive calls to this method will return the same ksession. 
      * @return 
      */
@@ -173,14 +176,14 @@ public class EmergencyProcessExternalSystemsWorkItemsTest {
             ksession.getWorkItemManager().registerWorkItemHandler("Human Task", humanActivitiesSimHandler);
 
             //Register the handler for "StartTrackingSystem" Work Item 
-            AsyncStartVehicleTrackingMockSystem trackingSystemHandler = new AsyncStartVehicleTrackingMockSystem(trackingSystem);
-            ksession.getWorkItemManager().registerWorkItemHandler("StartTrackingSystem", trackingSystemHandler);
+            AsyncVehicleTrackingMockSystem trackingSystemHandler = new AsyncVehicleTrackingMockSystem(trackingSystem);
+            ksession.getWorkItemManager().registerWorkItemHandler("VehicleTrackingSystem", trackingSystemHandler);
             
             //Configures a logger for the session
             KnowledgeRuntimeLoggerFactory.newConsoleLogger(ksession);
             
-            //Initialize the ActiveWorkItemPersister "system" 
-            ActiveWorkItemPersister.getInstance().setKsession(ksession);
+            //Initialize the ActiveWorkItemService "system" 
+            ActiveWorkItemService.getInstance().setKsession(ksession);
         }
         return ksession;
     }
@@ -221,29 +224,29 @@ public class EmergencyProcessExternalSystemsWorkItemsTest {
  * An asynchronous implementation of a WorkItemHandler. 
  * This implementation will start a a job in an external system (VehicleTrackingSystem)
  * and register the job (only the id of the job and the id of the work item)
- * in another system (ActiveWorkItemPersister).
+ * in another system (ActiveWorkItemService).
  * This is implementation is asynchronous because it doesn't complete the 
  * work item. The responsible to complete it is VehicleTrackingSystem through
- * ActiveWorkItemPersister.
+ * ActiveWorkItemService.
  * @author esteban
  */
-class AsyncStartVehicleTrackingMockSystem implements WorkItemHandler{
+class AsyncVehicleTrackingMockSystem implements WorkItemHandler{
 
     private VehicleTrackingSystem trackingSystem;
     
     /**
-     * Constructs a AsyncStartVehicleTrackingMockSystem. The given 
+     * Constructs a AsyncVehicleTrackingMockSystem. The given 
      * VehicleTrackingSystem is used to start a job.
      * @param trackingSystem 
      */
-    public AsyncStartVehicleTrackingMockSystem(VehicleTrackingSystem trackingSystem) {
+    public AsyncVehicleTrackingMockSystem(VehicleTrackingSystem trackingSystem) {
         this.trackingSystem = trackingSystem;
     }
 
 
     /**
      * This method will start a job in an external system (VehicleTrackingSystem)
-     * and register it in ActiveWorkItemPersister.
+     * and register it in ActiveWorkItemService.
      * This method WILL NOT complete the work item.
      * @param wi
      * @param wim 
@@ -257,10 +260,10 @@ class AsyncStartVehicleTrackingMockSystem implements WorkItemHandler{
        //inmediatly return a job id, but the execution will take some time. 
        String trackingId = this.trackingSystem.startTacking(vehicleId, vehicleType);
        
-       //Register the workItem/trackingId pair into ActiveWorkItemPersister.
+       //Register the workItem/trackingId pair into ActiveWorkItemService.
        //ActiveWorkItemPersister will be used later by VehicleTrackingSystem
        //in order to complete the work item.
-       ActiveWorkItemPersister.getInstance().registerWorkItem(wi.getId(), trackingId);
+       ActiveWorkItemService.getInstance().registerWorkItem(wi.getId(), trackingId);
        
     }
 
@@ -272,7 +275,7 @@ class AsyncStartVehicleTrackingMockSystem implements WorkItemHandler{
 }
 
 /**
- * Implementation of VehicleTrackingSystem that makes use of ActiveWorkItemPersister
+ * Implementation of VehicleTrackingSystem that makes use of ActiveWorkItemService
  * to notify when a job is actually finished.
  * @author esteban
  */
@@ -300,7 +303,7 @@ class MyAsyncTrackingSystemMock implements VehicleTrackingSystem{
     
     /**
      * Finishes a tracking job. When a job is ended, this method notifies
-     * ActiveWorkItemPersister so the process could continue its execution.
+     * ActiveWorkItemService so the process could continue its execution.
      * @param trackingId the id of the tracking job.
      */
     public void stopTacking(String trackingId){
@@ -311,8 +314,8 @@ class MyAsyncTrackingSystemMock implements VehicleTrackingSystem{
         Map<String, Object> outputParameters = new HashMap<String, Object>();
         outputParameters.put("trackingId", trackingId);
         
-        //Notifies ActiveWorkItemPersister
-        ActiveWorkItemPersister.getInstance().externalSystemJobCompleted(trackingId, outputParameters);
+        //Notifies ActiveWorkItemService
+        ActiveWorkItemService.getInstance().externalSystemJobCompleted(trackingId, outputParameters);
     }
     
     /**

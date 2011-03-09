@@ -10,20 +10,19 @@ import java.util.Map;
 import org.drools.runtime.StatefulKnowledgeSession;
 
 /**
- * Simple implementation of a Work Item Persister.
  * This class is used to store the information of running work items in a session.
  * You can register new Work Items and then complete them.
  * This class doesn't support ksession crashes. The ksession passed to its 
  * constructor must leave through all the process execution.
  * @author esteban
  */
-public class ActiveWorkItemPersister {
+public class ActiveWorkItemService {
     
-    private static ActiveWorkItemPersister INSTANCE;
+    private static ActiveWorkItemService INSTANCE;
     
-    public static synchronized ActiveWorkItemPersister getInstance() {
+    public static synchronized ActiveWorkItemService getInstance() {
         if (INSTANCE == null) {
-            INSTANCE = new ActiveWorkItemPersister();
+            INSTANCE = new ActiveWorkItemService();
         }
         
         return INSTANCE;
@@ -38,8 +37,9 @@ public class ActiveWorkItemPersister {
      * the value is the work item id.
      */
     private Map<String,Long> workItemsIdsMap = new HashMap<String, Long>();
+    private Map<String,Long> jobTimestampsMap = new HashMap<String, Long>();
     
-    private ActiveWorkItemPersister() {
+    private ActiveWorkItemService() {
     }
 
     /**
@@ -57,11 +57,13 @@ public class ActiveWorkItemPersister {
     
     /**
      * Registers a new active work item and binds it to an external system job.
+     * It also marks the starting timestamp of the external job 
      * @param workItemId
      * @param externalSystemJobId 
      */
     public void registerWorkItem(Long workItemId, String externalSystemJobId){
         this.workItemsIdsMap.put(externalSystemJobId, workItemId);
+        this.jobTimestampsMap.put(externalSystemJobId, System.currentTimeMillis());
     }
     
     /**
@@ -70,11 +72,24 @@ public class ActiveWorkItemPersister {
      * This method will complete the work item associated with the passed job id.
      * At this point, the process associated with the work item will continue
      * its execution.
+     * This method will also calculate the total execution time of the job and
+     * pass it as an output parameter.
      * @param externalSystemJobId
      * @param parameters 
      */
     public void externalSystemJobCompleted(String externalSystemJobId, Map<String,Object> parameters){
+        //gets the work item id associated with the job id.
         Long workItemId = this.workItemsIdsMap.remove(externalSystemJobId);
+        
+        //calculates the execution time of the job
+        long currentTimeMillis = System.currentTimeMillis();
+        Long startTime = this.jobTimestampsMap.remove(externalSystemJobId);
+        double executionTime = (currentTimeMillis - startTime)/1000; 
+ 
+        //set the execution time in the output parameters
+        parameters.put("trackingExecutionTime", executionTime);
+        
+        //Completes the work item
         ksession.getWorkItemManager().completeWorkItem(workItemId, parameters);
     }
     

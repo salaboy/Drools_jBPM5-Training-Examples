@@ -16,6 +16,7 @@
     <itemDefinition id="_vehicleItem" structureRef="com.wordpress.salaboy.example.model.Vehicle"/>
     <itemDefinition id="_emergencyItem" structureRef="com.wordpress.salaboy.example.model.Emergency"/>
     <itemDefinition id="_trackingIdItem" structureRef="java.lang.String"/>
+    <itemDefinition id="_trackingExecutionTime" structureRef="java.lang.Double"/>
 
     <process processType="Private" isExecutable="true" id="com.wordpress.salaboy.bpmn2.SimpleEmergencyService"
              name="Emergency Service Main Process">
@@ -24,6 +25,7 @@
         <property id="vehicle" itemSubjectRef="_vehicleItem"/>
         <property id="emergency" itemSubjectRef="_emergencyItem"/>
         <property id="trackingId" itemSubjectRef="_trackingIdItem"/>
+        <property id="trackingExecutionTime" itemSubjectRef="_trackingExecutionTime"/>
 
         <!-- nodes -->
         <startEvent id="_1" name="StartProcess"/>
@@ -187,17 +189,19 @@
 
        
 
-        <task id="_5" name="Start Vehicle Tracking (GPS)" tns:taskName="StartTrackingSystem" >
+        <task id="_5" name="Vehicle Tracking (GPS)" tns:taskName="VehicleTrackingSystem" >
           <ioSpecification>
             <dataInput id="_5_vehicle.typeInput" name="vehicle.type" />
             <dataInput id="_5_vehicle.idInput" name="vehicle.id" />
             <dataOutput id="_5_trackingIdOutput" name="trackingId" />
+            <dataOutput id="_5_trackingExecutionTimeOutput" name="trackingExecutionTime" />
             <inputSet>
               <dataInputRefs>_5_vehicle.typeInput</dataInputRefs>
               <dataInputRefs>_5_vehicle.idInput</dataInputRefs>
             </inputSet>
             <outputSet>
               <dataOutputRefs>_5_trackingIdOutput</dataOutputRefs>
+              <dataOutputRefs>_5_trackingExecutionTimeOutput</dataOutputRefs>
             </outputSet>
           </ioSpecification>
           <dataInputAssociation>
@@ -219,6 +223,10 @@
             <sourceRef>_5_trackingIdOutput</sourceRef>
             <targetRef>trackingId</targetRef>
           </dataOutputAssociation>
+          <dataOutputAssociation>
+            <sourceRef>_5_trackingExecutionTimeOutput</sourceRef>
+            <targetRef>trackingExecutionTime</targetRef>
+          </dataOutputAssociation>
         </task>
 
         <scriptTask id="_6" name="Report" scriptFormat="http://www.java.com/java">
@@ -228,6 +236,7 @@
                   System.out.println("Vehicle: "+process.getVariable("vehicle"));
                   System.out.println("Emergency: "+process.getVariable("emergency"));
                   System.out.println("Tracking ID from Tracking System: "+process.getVariable("trackingId"));
+                  System.out.println("Total Tracking Time: "+process.getVariable("trackingExecutionTime")+" seconds");
             </script>
         </scriptTask>
 
