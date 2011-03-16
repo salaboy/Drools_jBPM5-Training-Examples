@@ -183,7 +183,7 @@ public class PersistentEmergencyProcessTest {
         // My Emergency and My Process are both inserted as Facts / Truths in my Knowledge Session
         // Now Emergency and the Process Instance can be used by the inference engine
         processManager.insertFact(emergency);
-        processManager.insertFact(processManager);
+        processManager.insertProcess();
         
     }
 

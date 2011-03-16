@@ -48,6 +48,15 @@ public class PersistentProcessManager {
         ksession.insert(fact);
     }
     
+    /**
+     * Inserts the current process
+     */
+    public void insertProcess(){
+        StatefulKnowledgeSession ksession = this.getKnowledgeSession();
+        WorkflowProcessInstance process = (WorkflowProcessInstance) ksession.getProcessInstance(this.processInstanceId);
+        ksession.insert(process);
+    }
+    
     public int fireAllRules(){
         return this.getKnowledgeSession().fireAllRules();
     }
