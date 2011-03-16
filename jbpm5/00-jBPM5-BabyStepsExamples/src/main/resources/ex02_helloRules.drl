@@ -1,0 +1,22 @@
+import com.wordpress.salaboy.example.model.Hour
+
+rule "it is morning before lunch"
+	when
+		Hour(value >= 6, value < 12)
+	then 
+		System.out.println("Good morning.");
+end
+
+rule "it is afternoon before dinner"
+	when
+		Hour(value >= 12 && < 20)
+	then 
+		System.out.println("Good afternoon.");
+end
+
+rule "it is night afterwards"
+	when
+		$hour:Hour(value >= 20 || < 6)
+	then 
+		System.out.println("At "+$hour+" i wish you a good night.");
+end

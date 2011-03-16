@@ -1,0 +1,32 @@
+package com.googlecode.cursos.jbpm
+
+import org.drools.runtime.process.WorkflowProcessInstance;
+import com.wordpress.salaboy.example.model.Hour;
+
+rule "it is morning before lunch"
+	ruleflow-group "define_period"
+	when
+		$process: WorkflowProcessInstance()
+		Hour(value >=6 && < 12) from $process.getVariable("hourOfDay")
+	then 
+		$process.setVariable("period", "morning");
+end
+
+
+rule "it is afternoon before dinner"
+	ruleflow-group "define_period"
+	when
+		$process: WorkflowProcessInstance()
+		Hour(value >= 12 && < 20) from $process.getVariable("hourOfDay")
+	then 
+		$process.setVariable("period", "afternoon");
+end
+
+rule "it is night afterwards"
+	ruleflow-group "define_period"
+	when
+		$process: WorkflowProcessInstance()
+		Hour(value >= 20 || < 6) from $process.getVariable("hourOfDay")
+	then 
+		$process.setVariable("period", "night");
+end
