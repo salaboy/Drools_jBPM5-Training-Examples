@@ -113,7 +113,7 @@ public class PersistentEmergencyProcessTest {
         workItemHandlers.put("Human Task", humanActivitiesSimHandler);
         workItemHandlers.put("VehicleTrackingSystem", trackingSystemHandler);
         
-        //ProcessManager creation
+        //ProcessManager creation: feel free to switch between implementations.
         this.processManager = new InMemoryProcessManager(this.createKBase(), this.createEnvironment(), workItemHandlers, "com.wordpress.salaboy.bpmn2.SimpleEmergencyService");
         //this.processManager = new PersistentProcessManager(this.createKBase(), this.createEnvironment(), workItemHandlers, "com.wordpress.salaboy.bpmn2.SimpleEmergencyService");
         
