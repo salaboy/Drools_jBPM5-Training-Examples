@@ -7,9 +7,10 @@
  */
 package com.wordpress.salaboy.example.model;
 
+import java.io.Serializable;
 import java.util.UUID;
 
-public class Ambulance implements Vehicle{
+public class Ambulance implements Vehicle, Serializable{
     private String id;
     private String name;
 

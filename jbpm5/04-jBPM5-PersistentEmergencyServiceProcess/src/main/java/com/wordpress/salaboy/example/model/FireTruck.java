@@ -1,5 +1,6 @@
 package com.wordpress.salaboy.example.model;
 
+import java.io.Serializable;
 import java.util.UUID;
 
 /**
@@ -9,7 +10,7 @@ import java.util.UUID;
  * Time: 8:46 PM
  * To change this template use File | Settings | File Templates.
  */
-public class FireTruck implements Vehicle{
+public class FireTruck implements Vehicle, Serializable{
     private String id;
     private String name;
     

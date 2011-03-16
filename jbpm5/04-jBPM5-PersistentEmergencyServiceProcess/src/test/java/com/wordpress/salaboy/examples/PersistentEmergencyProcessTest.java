@@ -1,5 +1,6 @@
 package com.wordpress.salaboy.examples;
 
+import com.wordpress.salaboy.example.persistence.PersistentProcessManager;
 import bitronix.tm.TransactionManagerServices;
 import bitronix.tm.resource.jdbc.PoolingDataSource;
 import com.wordpress.salaboy.example.persistence.JSONTrackingJobsPersister;
@@ -14,8 +15,6 @@ import org.drools.KnowledgeBase;
 import org.drools.KnowledgeBaseFactory;
 import org.drools.builder.*;
 import org.drools.io.impl.ClassPathResource;
-import org.drools.logger.KnowledgeRuntimeLoggerFactory;
-import org.drools.runtime.StatefulKnowledgeSession;
 import org.drools.runtime.process.*;
 import org.junit.Assert;
 import org.junit.Test;
@@ -25,10 +24,8 @@ import java.util.Map;
 import java.util.UUID;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
-import org.drools.persistence.jpa.JPAKnowledgeService;
 import org.drools.runtime.Environment;
 import org.drools.runtime.EnvironmentName;
-import org.jbpm.workflow.core.WorkflowProcess;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -47,11 +44,6 @@ import org.junit.BeforeClass;
  */
 public class PersistentEmergencyProcessTest {
 
-    private Integer ksessionId;
-    /**
-     * The process instance id
-     */
-    private Long processInstanceId;
     /**
      * The Work Item Handler in charge of communication with External System
      */
@@ -61,9 +53,9 @@ public class PersistentEmergencyProcessTest {
      */
     private VehicleTrackingSystem trackingSystem;
 
-    private Environment env;
-    
     private static PoolingDataSource ds1;
+    
+    private PersistentProcessManager processManager;
     
     public PersistentEmergencyProcessTest() {
     }
@@ -89,23 +81,18 @@ public class PersistentEmergencyProcessTest {
     }
 
     @Before
-    public void createEnvironment() {
-        EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("org.drools.persistence.jpa");
-
-        env = KnowledgeBaseFactory.newEnvironment();
-
-        env.set(EnvironmentName.ENTITY_MANAGER_FACTORY,
-                entityManagerFactory);
-
-        env.set(EnvironmentName.TRANSACTION_MANAGER,
-                TransactionManagerServices.getTransactionManager());
-
-        Assert.assertNotNull(env);
-    }
-
-    @Before
-    public void createWorkItemHandlers() {
+    public void createPersistentProcessManager() {
         humanActivitiesSimHandler = new MyHumanChangingValuesSimulatorWorkItemHandler();
+        
+        AsyncVehicleTrackingMockSystem trackingSystemHandler = new AsyncVehicleTrackingMockSystem(trackingSystem);
+        
+        Map<String,WorkItemHandler> workItemHandlers = new HashMap<String, WorkItemHandler>();
+        workItemHandlers.put("Human Task", humanActivitiesSimHandler);
+        workItemHandlers.put("VehicleTrackingSystem", trackingSystemHandler);
+        
+        this.processManager = new PersistentProcessManager(this.createKBase(), this.createEnvironment(), workItemHandlers, "com.wordpress.salaboy.bpmn2.SimpleEmergencyService");
+        
+        humanActivitiesSimHandler.setProcessManager(processManager);
     }
         
     /**
@@ -119,56 +106,50 @@ public class PersistentEmergencyProcessTest {
     public void emergencyWithRulesTest() throws InterruptedException {
 
         this.startProcess();
-
-        StatefulKnowledgeSession ksession = this.getKnowledgeSession();
-        
-        WorkflowProcessInstance process = (WorkflowProcessInstance) ksession.getProcessInstance(this.processInstanceId);
-        
-        long nodeId = process.getNodeInstances().iterator().next().getNodeId();
         
         // Is the Process still Active?
-        Assert.assertEquals(ProcessInstance.STATE_ACTIVE, process.getState());
+        Assert.assertEquals(ProcessInstance.STATE_ACTIVE, this.processManager.getProcessState());
         // Is there a running node instance?
-        Assert.assertEquals(1, process.getNodeInstances().size());
+        Assert.assertEquals(1, processManager.getNodeInstancesSize());
         // Is the process stopped in the "Ask for Emergency Information" activity?
-        Assert.assertEquals("Ask for Emergency Information", ((WorkflowProcess)this.createKBase().getProcess("com.wordpress.salaboy.bpmn2.SimpleEmergencyService")).getNode(nodeId).getName());
+        Assert.assertEquals("Ask for Emergency Information", processManager.getCurrentNodeName());
         // Lets check the value of the emergency.getRevision(), it should be 1 
-        Assert.assertEquals(1, ((Emergency) process.getVariable("emergency")).getRevision());
+        Assert.assertEquals(1, ((Emergency) processManager.getProcessVariable("emergency")).getRevision());
 
         System.out.println("Completing the first Activity");
         //Complete the first human activity
-        humanActivitiesSimHandler.completeWorkItem(ksession.getWorkItemManager());
+        humanActivitiesSimHandler.completeWorkItem();   
         // Is the Process still Active?
-        Assert.assertEquals(ProcessInstance.STATE_ACTIVE, process.getState());
+        Assert.assertEquals(ProcessInstance.STATE_ACTIVE, this.processManager.getProcessState());
 
         //I need to call the FireAllRules method because I have a RuleTask inside the business process
-        int fired = ksession.fireAllRules();
+        int fired = this.processManager.fireAllRules();
         // Now that I have rules being evaluated, at least one should fire
         Assert.assertEquals(1, fired);
 
         // Lets check the value of the vehicle variable it should be an Ambulance => Heart Attack 
-        Vehicle selectedVehicle = ((Vehicle) process.getVariable("vehicle"));
+        Vehicle selectedVehicle = ((Vehicle) processManager.getProcessVariable("vehicle"));
         Assert.assertTrue(selectedVehicle instanceof Ambulance);
 
         // Is the Process still Active?
-        Assert.assertEquals(ProcessInstance.STATE_ACTIVE, process.getState());
+        Assert.assertEquals(ProcessInstance.STATE_ACTIVE, processManager.getProcessState());
         // Is there a running node instance?
-        Assert.assertEquals(1, process.getNodeInstances().size());
+        Assert.assertEquals(1, processManager.getNodeInstancesSize());
         // Is the process stopped in the "Dispatch Vehicle" activity?
-        Assert.assertEquals("Dispatch Vehicle", process.getNodeInstances().iterator().next().getNodeName());
+        Assert.assertEquals("Dispatch Vehicle", processManager.getCurrentNodeName());
         // Lets check the value of the emergency.getRevision(), it should be 1 
-        Assert.assertEquals(2, ((Emergency) process.getVariable("emergency")).getRevision());
+        Assert.assertEquals(2, ((Emergency) processManager.getProcessVariable("emergency")).getRevision());
 
         System.out.println("Completing the second Activity");
         //Complete the second human activity
-        humanActivitiesSimHandler.completeWorkItem(ksession.getWorkItemManager());
+        humanActivitiesSimHandler.completeWorkItem();
 
         //Start Tracking is not automatic. The external system has to finish first.
         //Until then, the process will be waiting in StartTrackingSystem
         Assert.assertEquals("Vehicle " + selectedVehicle.getId() + " Located at 5th and A Avenue", trackingSystem.queryVehicleStatus(selectedVehicle.getId()));
 
         // Is the process completed? It shouldn't be because the External System didn't finish yet.
-        Assert.assertEquals(ProcessInstance.STATE_ACTIVE, process.getState());
+        Assert.assertEquals(ProcessInstance.STATE_ACTIVE, this.processManager.getProcessState());
 
         //Now complete the external system. We will wait a few seconds to 
         //emulate the time needed by the VehicleTrackingSystem to complete the 
@@ -177,7 +158,7 @@ public class PersistentEmergencyProcessTest {
         this.trackingSystem.stopTacking(this.trackingSystem.queryVehicleTrackingId(selectedVehicle.getId()));
 
         // Is the process completed now?
-        Assert.assertEquals(ProcessInstance.STATE_COMPLETED, process.getState());
+        Assert.assertEquals(ProcessInstance.STATE_COMPLETED, this.processManager.getProcessState());
     }
 
     /**
@@ -195,60 +176,33 @@ public class PersistentEmergencyProcessTest {
         parameters.put("emergency", emergency);
 
         //Starts the process
-        StatefulKnowledgeSession ksession = this.getKnowledgeSession();
-        WorkflowProcessInstance process = (WorkflowProcessInstance) ksession.startProcess("com.wordpress.salaboy.bpmn2.SimpleEmergencyService", parameters);
+        processManager.startProcess(parameters);
 
-        this.processInstanceId = process.getId();
         
         // My Emergency and My Process are both inserted as Facts / Truths in my Knowledge Session
         // Now Emergency and the Process Instance can be used by the inference engine
-        ksession.insert(emergency);
-        ksession.insert(process);
+        processManager.insertFact(emergency);
+        processManager.insertFact(processManager);
         
     }
 
-    /**
-     * Creates and configures a ksession. It set up all the needed handlers and
-     * logger. It also initialize the ActiveWorkItemService "system". 
-     * Successive calls to this method will return the same ksession. 
-     * @return 
-     */
-    private StatefulKnowledgeSession getKnowledgeSession() {
-        StatefulKnowledgeSession ksession = null;
-        KnowledgeBase kbase = this.createKBase();
-        if (ksessionId == null) {
-            
-            ksession = JPAKnowledgeService.newStatefulKnowledgeSession(
-                kbase,
-                null,
-                env);
-            
-            ksessionId = ksession.getId();
-            
-            //Initialize the ActiveWorkItemService "system"
-            //TODO: FIX THIS!
-            ActiveWorkItemService.getInstance().setKsession(ksession);
-        }else{
-            ksession = JPAKnowledgeService.loadStatefulKnowledgeSession(
-                ksessionId,
-                kbase,
-                null,
-                env);
-        }
+    public Environment createEnvironment() {
+        EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("org.drools.persistence.jpa");
+
+        Environment env = KnowledgeBaseFactory.newEnvironment();
+
+        Assert.assertNotNull(env);
         
-        //Registers the handler for "Human Task" 
-        ksession.getWorkItemManager().registerWorkItemHandler("Human Task", humanActivitiesSimHandler);
+        env.set(EnvironmentName.ENTITY_MANAGER_FACTORY,
+                entityManagerFactory);
 
-        //Register the handler for "StartTrackingSystem" Work Item 
-        AsyncVehicleTrackingMockSystem trackingSystemHandler = new AsyncVehicleTrackingMockSystem(trackingSystem);
-        ksession.getWorkItemManager().registerWorkItemHandler("VehicleTrackingSystem", trackingSystemHandler);
+        env.set(EnvironmentName.TRANSACTION_MANAGER,
+                TransactionManagerServices.getTransactionManager());
 
-        //Configures a logger for the session
-        KnowledgeRuntimeLoggerFactory.newConsoleLogger(ksession);
-
-        return ksession;
+        return env;
     }
-
+    
+    
     /**
      * Creates a kbase containing the process definition and a set
      * of validation rules.
