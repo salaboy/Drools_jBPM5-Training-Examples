@@ -29,6 +29,8 @@ public class PersistentProcessManager {
     private String processId;
     private long processInstanceId;
 
+    private StatefulKnowledgeSession ksession;
+    
     public PersistentProcessManager(KnowledgeBase kbase, Environment env, Map<String, WorkItemHandler> workItemsHandlers, String processId) {
         this.kbase = kbase;
         this.env = env;
@@ -38,13 +40,12 @@ public class PersistentProcessManager {
     
     
     public void startProcess(Map<String, Object> parameters){
-        StatefulKnowledgeSession ksession = this.getKnowledgeSession();
+        ksession = this.getKnowledgeSession();
         ProcessInstance process = ksession.startProcess(processId, parameters);
         this.processInstanceId = process.getId();
     }
     
     public void insertFact(Object fact){
-        StatefulKnowledgeSession ksession = this.getKnowledgeSession();
         ksession.insert(fact);
     }
     
@@ -52,47 +53,43 @@ public class PersistentProcessManager {
      * Inserts the current process
      */
     public void insertProcess(){
-        StatefulKnowledgeSession ksession = this.getKnowledgeSession();
         WorkflowProcessInstance process = (WorkflowProcessInstance) ksession.getProcessInstance(this.processInstanceId);
         ksession.insert(process);
     }
     
     public int fireAllRules(){
-        return this.getKnowledgeSession().fireAllRules();
+        return ksession.fireAllRules();
     }
     
     public int getProcessState(){
-        StatefulKnowledgeSession ksession = this.getKnowledgeSession();
         WorkflowProcessInstance process = (WorkflowProcessInstance) ksession.getProcessInstance(this.processInstanceId);
         return process.getState();
     }
     
+    public boolean isProcessInstanceCompleted(){
+       return ksession.getProcessInstance(this.processInstanceId) == null;
+    }
+    
     public int getNodeInstancesSize(){
-        StatefulKnowledgeSession ksession = this.getKnowledgeSession();
         return ((WorkflowProcessInstance)ksession.getProcessInstance(this.processInstanceId)).getNodeInstances().size();
     }
     
     public String getCurrentNodeName(){
-        StatefulKnowledgeSession ksession = this.getKnowledgeSession();
         WorkflowProcessInstance process = (WorkflowProcessInstance) ksession.getProcessInstance(this.processInstanceId);
         long nodeId = process.getNodeInstances().iterator().next().getNodeId();
         return ((WorkflowProcess)this.kbase.getProcess(this.processId)).getNode(nodeId).getName();
     }
     
     public void completeWorkItem(long workItemId, Map<String, Object> outputParameters){
-        StatefulKnowledgeSession ksession = this.getKnowledgeSession();
         ksession.getWorkItemManager().completeWorkItem(workItemId, outputParameters);
-        System.out.println("--->Current Node= "+this.getCurrentNodeName());
     }
     
     public Object getProcessVariable(String name){
-        StatefulKnowledgeSession ksession = this.getKnowledgeSession();
         WorkflowProcessInstance process = (WorkflowProcessInstance) ksession.getProcessInstance(this.processInstanceId);
         return process.getVariable(name);
     }
     
     public void setProcessVariable(String name, Object value){
-        StatefulKnowledgeSession ksession = this.getKnowledgeSession();
         WorkflowProcessInstance process = (WorkflowProcessInstance) ksession.getProcessInstance(this.processInstanceId);
         process.setVariable(name,value);
     }

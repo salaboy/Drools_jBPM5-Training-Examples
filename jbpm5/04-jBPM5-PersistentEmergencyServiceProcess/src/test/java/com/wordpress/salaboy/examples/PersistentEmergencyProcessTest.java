@@ -83,7 +83,7 @@ public class PersistentEmergencyProcessTest {
     @Before
     public void createPersistentProcessManager() {
         humanActivitiesSimHandler = new MyHumanChangingValuesSimulatorWorkItemHandler();
-        
+        this.trackingSystem = new MyAsyncTrackingSystemMock();
         AsyncVehicleTrackingMockSystem trackingSystemHandler = new AsyncVehicleTrackingMockSystem(trackingSystem);
         
         Map<String,WorkItemHandler> workItemHandlers = new HashMap<String, WorkItemHandler>();
@@ -109,6 +109,7 @@ public class PersistentEmergencyProcessTest {
         this.startProcess();
         
         // Is the Process still Active?
+        Assert.assertFalse(this.processManager.isProcessInstanceCompleted());
         Assert.assertEquals(ProcessInstance.STATE_ACTIVE, this.processManager.getProcessState());
         // Is there a running node instance?
         Assert.assertEquals(1, processManager.getNodeInstancesSize());
@@ -121,6 +122,7 @@ public class PersistentEmergencyProcessTest {
         //Complete the first human activity
         humanActivitiesSimHandler.completeWorkItem();   
         // Is the Process still Active?
+        Assert.assertFalse(this.processManager.isProcessInstanceCompleted());
         Assert.assertEquals(ProcessInstance.STATE_ACTIVE, this.processManager.getProcessState());
 
         //I need to call the FireAllRules method because I have a RuleTask inside the business process
@@ -133,6 +135,7 @@ public class PersistentEmergencyProcessTest {
         Assert.assertTrue(selectedVehicle instanceof Ambulance);
 
         // Is the Process still Active?
+        Assert.assertFalse(this.processManager.isProcessInstanceCompleted());
         Assert.assertEquals(ProcessInstance.STATE_ACTIVE, processManager.getProcessState());
         // Is there a running node instance?
         Assert.assertEquals(1, processManager.getNodeInstancesSize());
@@ -150,6 +153,7 @@ public class PersistentEmergencyProcessTest {
         Assert.assertEquals("Vehicle " + selectedVehicle.getId() + " Located at 5th and A Avenue", trackingSystem.queryVehicleStatus(selectedVehicle.getId()));
 
         // Is the process completed? It shouldn't be because the External System didn't finish yet.
+        Assert.assertFalse(this.processManager.isProcessInstanceCompleted());
         Assert.assertEquals(ProcessInstance.STATE_ACTIVE, this.processManager.getProcessState());
 
         //Now complete the external system. We will wait a few seconds to 
@@ -159,7 +163,7 @@ public class PersistentEmergencyProcessTest {
         this.trackingSystem.stopTacking(this.trackingSystem.queryVehicleTrackingId(selectedVehicle.getId()));
 
         // Is the process completed now?
-        Assert.assertEquals(ProcessInstance.STATE_COMPLETED, this.processManager.getProcessState());
+        Assert.assertTrue(this.processManager.isProcessInstanceCompleted());
     }
 
     /**

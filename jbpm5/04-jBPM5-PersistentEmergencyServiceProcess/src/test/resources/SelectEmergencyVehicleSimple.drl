@@ -15,7 +15,7 @@ rule "New Ambulance for Heart Attack Emergencies"
     then
         System.out.println("A new Ambuance is being created!");
         Ambulance ambulance = new Ambulance("MyAmbulance");
-        $process.setVariable("vehicle", ambulance);
+        ((WorkflowProcessInstance)kcontext.getKnowledgeRuntime().getProcessInstance($process.getId())).setVariable("vehicle", ambulance);
         insert(ambulance);
 end
 
@@ -28,6 +28,6 @@ rule "New Fire Truck for Fire Emergencies"
     then
         System.out.println("A new FireTruck is being created!");
         FireTruck fireTruck = new FireTruck("MyFireTruck");
-        $process.setVariable("vehicle", fireTruck);
+        ((WorkflowProcessInstance)kcontext.getKnowledgeRuntime().getProcessInstance($process.getId())).setVariable("vehicle", fireTruck);
         insert(fireTruck);
 end
