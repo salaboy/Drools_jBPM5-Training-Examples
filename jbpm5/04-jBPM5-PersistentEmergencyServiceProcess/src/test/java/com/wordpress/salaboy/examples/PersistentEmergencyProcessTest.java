@@ -9,6 +9,7 @@ import com.wordpress.salaboy.example.model.Emergency;
 import com.wordpress.salaboy.example.model.Vehicle;
 import com.wordpress.salaboy.example.persistence.ActiveWorkItemService;
 import com.wordpress.salaboy.example.persistence.TrackingJobInfo;
+import com.wordpress.salaboy.examples.definitions.VehicleTrackingSystem;
 import org.drools.KnowledgeBase;
 import org.drools.KnowledgeBaseFactory;
 import org.drools.builder.*;
@@ -27,6 +28,7 @@ import javax.persistence.Persistence;
 import org.drools.persistence.jpa.JPAKnowledgeService;
 import org.drools.runtime.Environment;
 import org.drools.runtime.EnvironmentName;
+import org.jbpm.workflow.core.WorkflowProcess;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -117,18 +119,20 @@ public class PersistentEmergencyProcessTest {
         
         WorkflowProcessInstance process = (WorkflowProcessInstance) ksession.getProcessInstance(this.processInstanceId);
         
+        long nodeId = process.getNodeInstances().iterator().next().getNodeId();
+        
         // Is the Process still Active?
         Assert.assertEquals(ProcessInstance.STATE_ACTIVE, process.getState());
         // Is there a running node instance?
         Assert.assertEquals(1, process.getNodeInstances().size());
         // Is the process stopped in the "Ask for Emergency Information" activity?
-        Assert.assertEquals("Ask for Emergency Information", process.getNodeInstances().iterator().next().getNodeName());
+        Assert.assertEquals("Ask for Emergency Information", ((WorkflowProcess)this.createKBase().getProcess("com.wordpress.salaboy.bpmn2.SimpleEmergencyService")).getNode(nodeId).getName());
         // Lets check the value of the emergency.getRevision(), it should be 1 
         Assert.assertEquals(1, ((Emergency) process.getVariable("emergency")).getRevision());
 
         System.out.println("Completing the first Activity");
         //Complete the first human activity
-        humanActivitiesSimHandler.completeWorkItem();
+        humanActivitiesSimHandler.completeWorkItem(ksession.getWorkItemManager());
         // Is the Process still Active?
         Assert.assertEquals(ProcessInstance.STATE_ACTIVE, process.getState());
 
@@ -153,7 +157,7 @@ public class PersistentEmergencyProcessTest {
 
         System.out.println("Completing the second Activity");
         //Complete the second human activity
-        humanActivitiesSimHandler.completeWorkItem();
+        humanActivitiesSimHandler.completeWorkItem(ksession.getWorkItemManager());
 
         //Start Tracking is not automatic. The external system has to finish first.
         //Until then, the process will be waiting in StartTrackingSystem

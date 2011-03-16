@@ -17,14 +17,12 @@ import org.drools.runtime.process.WorkItemManager;
  */
 public class MyHumanChangingValuesSimulatorWorkItemHandler implements WorkItemHandler {
     private static int counter = 1;
-    private WorkItemManager workItemManager;
     private long workItemId;
     private Map<String, Object> results;
     private Emergency currentEmergency;
 
     public void executeWorkItem(WorkItem workItem, WorkItemManager workItemManager) {
         this.workItemId = workItem.getId();
-        this.workItemManager = workItemManager;
         currentEmergency = (Emergency) workItem.getParameter("emergency");
         currentEmergency.setRevision(currentEmergency.getRevision() + counter);
 
@@ -35,7 +33,7 @@ public class MyHumanChangingValuesSimulatorWorkItemHandler implements WorkItemHa
 
     }
 
-    public void completeWorkItem() {
+    public void completeWorkItem(WorkItemManager workItemManager) {
         results = new HashMap<String, Object>();
         results.put("emergency", currentEmergency);
         workItemManager.completeWorkItem(workItemId, results);
