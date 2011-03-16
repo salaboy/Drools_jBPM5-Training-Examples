@@ -103,6 +103,11 @@ public class PersistentEmergencyProcessTest {
         Assert.assertNotNull(env);
     }
 
+    @Before
+    public void createWorkItemHandlers() {
+        humanActivitiesSimHandler = new MyHumanChangingValuesSimulatorWorkItemHandler();
+    }
+        
     /**
      * This test will complete the first two Human Activities. When the process
      * enters the Work Item, it will communicate to the external system. The process
@@ -140,7 +145,6 @@ public class PersistentEmergencyProcessTest {
         int fired = ksession.fireAllRules();
         // Now that I have rules being evaluated, at least one should fire
         Assert.assertEquals(1, fired);
-
 
         // Lets check the value of the vehicle variable it should be an Ambulance => Heart Attack 
         Vehicle selectedVehicle = ((Vehicle) process.getVariable("vehicle"));
@@ -233,7 +237,6 @@ public class PersistentEmergencyProcessTest {
         }
         
         //Registers the handler for "Human Task" 
-        humanActivitiesSimHandler = new MyHumanChangingValuesSimulatorWorkItemHandler();
         ksession.getWorkItemManager().registerWorkItemHandler("Human Task", humanActivitiesSimHandler);
 
         //Register the handler for "StartTrackingSystem" Work Item 
