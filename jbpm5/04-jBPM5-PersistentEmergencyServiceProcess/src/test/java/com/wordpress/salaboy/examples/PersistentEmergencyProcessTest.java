@@ -93,6 +93,7 @@ public class PersistentEmergencyProcessTest {
         this.processManager = new PersistentProcessManager(this.createKBase(), this.createEnvironment(), workItemHandlers, "com.wordpress.salaboy.bpmn2.SimpleEmergencyService");
         
         humanActivitiesSimHandler.setProcessManager(processManager);
+        ActiveWorkItemService.getInstance().setProcessManager(processManager);
     }
         
     /**

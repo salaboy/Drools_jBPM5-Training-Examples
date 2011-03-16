@@ -73,6 +73,7 @@ public class PersistentProcessManager {
     public void completeWorkItem(long workItemId, Map<String, Object> outputParameters){
         StatefulKnowledgeSession ksession = this.getKnowledgeSession();
         ksession.getWorkItemManager().completeWorkItem(workItemId, outputParameters);
+        System.out.println("--->Current Node= "+this.getCurrentNodeName());
     }
     
     public Object getProcessVariable(String name){
@@ -97,10 +98,6 @@ public class PersistentProcessManager {
                 env);
             
             ksessionId = ksession.getId();
-            
-            //Initialize the ActiveWorkItemService "system"
-            //TODO: FIX THIS!
-            ActiveWorkItemService.getInstance().setKsession(ksession);
         }else{
             ksession = JPAKnowledgeService.loadStatefulKnowledgeSession(
                 ksessionId,

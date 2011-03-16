@@ -7,7 +7,6 @@ package com.wordpress.salaboy.example.persistence;
 
 import java.util.HashMap;
 import java.util.Map;
-import org.drools.runtime.StatefulKnowledgeSession;
 
 /**
  * This class is used to store the information of running work items in a session.
@@ -29,7 +28,7 @@ public class ActiveWorkItemService {
     }
 
     
-    private StatefulKnowledgeSession ksession;
+    private PersistentProcessManager processManager;
     
     /**
      * An in-memory map of WorkItem ids and External System ids.
@@ -42,17 +41,8 @@ public class ActiveWorkItemService {
     private ActiveWorkItemService() {
     }
 
-    /**
-     * Method to set the ksession of this object. This method must be called 
-     * only once. 
-     * I know, I know... I should have created a Factory or something else ;)
-     * @param ksession 
-     */
-    public void setKsession(StatefulKnowledgeSession ksession) {
-        if (this.ksession != null){
-            throw new IllegalStateException("The ksession is already set!");
-        }
-        this.ksession = ksession;
+    public void setProcessManager(PersistentProcessManager processManager) {
+        this.processManager = processManager;
     }
     
     /**
@@ -90,7 +80,7 @@ public class ActiveWorkItemService {
         parameters.put("trackingExecutionTime", executionTime);
         
         //Completes the work item
-        ksession.getWorkItemManager().completeWorkItem(workItemId, parameters);
+        this.processManager.completeWorkItem(workItemId, parameters);
     }
     
     
