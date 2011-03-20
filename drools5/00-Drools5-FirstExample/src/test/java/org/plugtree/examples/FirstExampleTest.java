@@ -16,7 +16,7 @@ import org.plugtree.examples.model.Person;
 import org.plugtree.examples.model.Pet;
 
 
-public class FirstExample {
+public class FirstExampleTest {
 
 
     /**
