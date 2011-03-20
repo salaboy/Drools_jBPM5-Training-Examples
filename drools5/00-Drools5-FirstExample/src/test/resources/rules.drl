@@ -1,0 +1,39 @@
+package org.plugtree.examples;
+
+import org.plugtree.examples.model.Person;
+import org.plugtree.examples.model.Pet;
+import org.plugtree.examples.model.Firefighter;
+import org.plugtree.examples.model.Pet.PetType;
+
+rule "Call a Cat when it is in a tree"
+    when
+        $p: Person($pet: pet, petCallCount == 0)
+        $cat: Pet(this == $pet, position == "on a limb", type == PetType.CAT)
+    then
+       System.out.println($p.getName()+": "+$cat.getName() + " come down!");
+       $p.setPetCallCount($p.getPetCallCount()+1);
+       update($p);
+end
+
+rule "Call the fire department"
+    when
+        $p: Person($pet: pet, petCallCount > 0)
+        $cat: Pet(this == $pet, position == "on a limb", type == PetType.CAT)
+    then
+       System.out.println($p.getName()+": Hello... Fire Department? My Cat is on a tree. Please help me.");
+       Firefighter firefighter = new Firefighter("Fred");
+       insert(firefighter);
+end
+
+rule "Firefighter gets the cat down"
+    when
+        $f: Firefighter()
+        $p: Person($pet: pet, petCallCount > 0)
+        $cat: Pet(this == $pet, position == "on a limb", type == PetType.CAT)
+    then
+       System.out.println("Firefighter " +$f.getName()+": I'm getting the cat down.");
+       $cat.setPosition("on the street");
+       retract($f);
+       update($cat);
+end
+
