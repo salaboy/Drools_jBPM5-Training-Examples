@@ -1,6 +1,5 @@
 package com.wordpress.salaboy.examples;
 
-import com.wordpress.salaboy.example.persistence.PersistentProcessManager;
 import bitronix.tm.TransactionManagerServices;
 import bitronix.tm.resource.jdbc.PoolingDataSource;
 import com.wordpress.salaboy.example.persistence.JSONTrackingJobsPersister;
@@ -9,6 +8,9 @@ import com.wordpress.salaboy.example.model.Ambulance;
 import com.wordpress.salaboy.example.model.Emergency;
 import com.wordpress.salaboy.example.model.Vehicle;
 import com.wordpress.salaboy.example.persistence.ActiveWorkItemService;
+import com.wordpress.salaboy.example.persistence.InMemoryProcessManager;
+import com.wordpress.salaboy.example.persistence.PersistentProcessManager;
+import com.wordpress.salaboy.example.persistence.ProcessManager;
 import com.wordpress.salaboy.example.persistence.TrackingJobInfo;
 import com.wordpress.salaboy.examples.definitions.VehicleTrackingSystem;
 import org.drools.KnowledgeBase;
@@ -31,15 +33,13 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 
 /**
- * This test shows a more real scenario:
- * WorkItemHandler start a job in an External System (VehicleTrackingSystem) and
- * then uses another system (ActiveWorkItemService) to store the information 
- * of the execution.
- * At this point, the application running the process could fail. 
- * ActiveWorkItemService will store all the needed information to continue
- * the execution of the process when VehicleTrackingSystem ends. 
- * Because this is just a test, ActiveWorkItemService doesn't really support
- * a system crash because is sharing the same ksession with PersistentEmergencyProcessTest.
+ * Similar to 03 - Emergency Service Process and Asynchronous Work Items Examples
+ * but using process persistence.
+ * 
+ * This test uses a helper class (ProcessManager) to encapsulate the ksession.
+ * There are currently 2 implementations for ProcessManager:
+ *  -InMemoryProcessManager: doesn't support server crashes
+ *  -PersistentProcessManager: support server crashes.
  * 
  */
 public class PersistentEmergencyProcessTest {
@@ -48,18 +48,29 @@ public class PersistentEmergencyProcessTest {
      * The Work Item Handler in charge of communication with External System
      */
     private MyHumanChangingValuesSimulatorWorkItemHandler humanActivitiesSimHandler;
+    
     /**
      * The external system
      */
     private VehicleTrackingSystem trackingSystem;
 
+    /**
+     * We are using JTA so we need a JTA-enabled DataSource
+     */
     private static PoolingDataSource ds1;
     
-    private PersistentProcessManager processManager;
+    /**
+     * Process Manager in charge of the communication with the process and 
+     * the ksession.
+     */
+    private ProcessManager processManager;
     
     public PersistentEmergencyProcessTest() {
     }
 
+    /**
+     * Data source creation
+     */
     @BeforeClass
     public static void createDataSource() {
         ds1 = new PoolingDataSource();
@@ -73,6 +84,9 @@ public class PersistentEmergencyProcessTest {
         ds1.init();
     }
     
+    /**
+     * Data source cleaning
+     */
     @AfterClass
     public static void closeDataSource() {
         if (ds1 != null){
@@ -80,8 +94,17 @@ public class PersistentEmergencyProcessTest {
         }
     }
 
+    /**
+     * Create the ProcessManager used by the test. 
+     * Try switching between ProcesManager's implementations to see the differences. 
+     */
     @Before
     public void createPersistentProcessManager() {
+        
+        //Creates a new TrackingSystem
+        this.trackingSystem = new MyAsyncTrackingSystemMock();
+        
+        //Work Item Handlers
         humanActivitiesSimHandler = new MyHumanChangingValuesSimulatorWorkItemHandler();
         this.trackingSystem = new MyAsyncTrackingSystemMock();
         AsyncVehicleTrackingMockSystem trackingSystemHandler = new AsyncVehicleTrackingMockSystem(trackingSystem);
@@ -90,8 +113,11 @@ public class PersistentEmergencyProcessTest {
         workItemHandlers.put("Human Task", humanActivitiesSimHandler);
         workItemHandlers.put("VehicleTrackingSystem", trackingSystemHandler);
         
-        this.processManager = new PersistentProcessManager(this.createKBase(), this.createEnvironment(), workItemHandlers, "com.wordpress.salaboy.bpmn2.SimpleEmergencyService");
+        //ProcessManager creation: feel free to switch between implementations.
+        this.processManager = new InMemoryProcessManager(this.createKBase(), this.createEnvironment(), workItemHandlers, "com.wordpress.salaboy.bpmn2.SimpleEmergencyService");
+        //this.processManager = new PersistentProcessManager(this.createKBase(), this.createEnvironment(), workItemHandlers, "com.wordpress.salaboy.bpmn2.SimpleEmergencyService");
         
+        //Work Items Handlers configuration
         humanActivitiesSimHandler.setProcessManager(processManager);
         ActiveWorkItemService.getInstance().setProcessManager(processManager);
     }
@@ -101,12 +127,29 @@ public class PersistentEmergencyProcessTest {
      * enters the Work Item, it will communicate to the external system. The process
      * will be waiting in the Work Item  for the external system to complete.
      * When the external system complete the request, the process is continued.
+     * 
+     * A ProcessManager instance is used for communication with process and ksession.
+     * Invocations of ProcessManager's methods will automatically persist Process 
+     * and Session data.
+     * 
      * @throws InterruptedException 
      */
     @Test
     public void emergencyWithRulesTest() throws InterruptedException {
 
-        this.startProcess();
+        //Creates a new emergency and set it as process input parameter
+        Emergency emergency = new Emergency("555-1234");
+        emergency.setType("Heart Attack");
+        Map<String, Object> parameters = new HashMap<String, Object>();
+        parameters.put("emergency", emergency);
+
+        //Starts the process
+        processManager.startProcess(parameters);
+
+        // emergency and process are both inserted as Facts / Truths in my Knowledge Session
+        // Now Emergency and the Process Instance can be used by the inference engine
+        processManager.insertFact(emergency);
+        processManager.insertProcess();
         
         // Is the Process still Active?
         Assert.assertFalse(this.processManager.isProcessInstanceCompleted());
@@ -167,40 +210,18 @@ public class PersistentEmergencyProcessTest {
     }
 
     /**
-     * Creates a ksession and starts the process
+     * Creates the Drools Environment used to configure Persistence
+     * @return 
      */
-    public void startProcess() {
-
-        //Creates a new TrackingSystem
-        this.trackingSystem = new MyAsyncTrackingSystemMock();
-
-        //Creates a new emergency and set it as process input parameter
-        Emergency emergency = new Emergency("555-1234");
-        emergency.setType("Heart Attack");
-        Map<String, Object> parameters = new HashMap<String, Object>();
-        parameters.put("emergency", emergency);
-
-        //Starts the process
-        processManager.startProcess(parameters);
-
-        
-        // My Emergency and My Process are both inserted as Facts / Truths in my Knowledge Session
-        // Now Emergency and the Process Instance can be used by the inference engine
-        processManager.insertFact(emergency);
-        processManager.insertProcess();
-        
-    }
-
     public Environment createEnvironment() {
+        //Creates a new EntityManagerFactory
         EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("org.drools.persistence.jpa");
 
+        //Creates the Environment and sets its attributes
         Environment env = KnowledgeBaseFactory.newEnvironment();
-
         Assert.assertNotNull(env);
-        
         env.set(EnvironmentName.ENTITY_MANAGER_FACTORY,
                 entityManagerFactory);
-
         env.set(EnvironmentName.TRANSACTION_MANAGER,
                 TransactionManagerServices.getTransactionManager());
 

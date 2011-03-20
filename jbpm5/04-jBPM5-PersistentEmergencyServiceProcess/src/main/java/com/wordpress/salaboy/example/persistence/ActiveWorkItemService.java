@@ -28,7 +28,7 @@ public class ActiveWorkItemService {
     }
 
     
-    private PersistentProcessManager processManager;
+    private ProcessManager processManager;
     
     /**
      * An in-memory map of WorkItem ids and External System ids.
@@ -41,7 +41,7 @@ public class ActiveWorkItemService {
     private ActiveWorkItemService() {
     }
 
-    public void setProcessManager(PersistentProcessManager processManager) {
+    public void setProcessManager(ProcessManager processManager) {
         this.processManager = processManager;
     }
     

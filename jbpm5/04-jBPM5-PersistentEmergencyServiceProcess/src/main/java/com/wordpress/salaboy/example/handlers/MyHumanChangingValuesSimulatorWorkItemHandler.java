@@ -5,7 +5,8 @@
 package com.wordpress.salaboy.example.handlers;
 
 import com.wordpress.salaboy.example.model.Emergency;
-import com.wordpress.salaboy.example.persistence.PersistentProcessManager;
+import com.wordpress.salaboy.example.persistence.InMemoryProcessManager;
+import com.wordpress.salaboy.example.persistence.ProcessManager;
 import java.util.HashMap;
 import java.util.Map;
 import org.drools.runtime.process.WorkItem;
@@ -22,9 +23,9 @@ public class MyHumanChangingValuesSimulatorWorkItemHandler implements WorkItemHa
     private Map<String, Object> results;
     private Emergency currentEmergency;
 
-    private PersistentProcessManager processManager;
+    private ProcessManager processManager;
 
-    public void setProcessManager(PersistentProcessManager processManager) {
+    public void setProcessManager(ProcessManager processManager) {
         this.processManager = processManager;
     }
     
