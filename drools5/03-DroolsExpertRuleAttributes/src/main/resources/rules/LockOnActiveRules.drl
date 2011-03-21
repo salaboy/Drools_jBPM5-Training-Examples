@@ -1,0 +1,42 @@
+#lock-on-active prevents the rule to be activated again if a Rule inside the same
+#agenda-group or ruleflow-group modifies a fact. lock-on-active is a stronger
+#version of no-loop.
+#We used salience because we wanted to Classify the songs first and then
+#number them.
+package org.plugtree.training
+
+import org.plugtree.training.model.*
+import java.util.concurrent.atomic.AtomicInteger
+
+global AtomicInteger index;
+
+rule "Classify Songs"
+    salience 1
+    lock-on-active
+    when
+        $song : Song()
+    then
+        modify($song){
+            setName($song.getGenre()+"_"+$song.getName());
+        }
+end
+
+
+rule "Number Songs"
+    salience 0
+    lock-on-active
+    when
+        $song : Song()
+    then
+        modify($song){
+            setName(index.getAndIncrement()+"_"+$song.getName());
+        }
+end
+
+
+
+
+
+
+
+

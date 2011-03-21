@@ -1,0 +1,37 @@
+package org.plugtree.training;
+
+import org.plugtree.training.model.*;
+import java.util.ArrayList;
+
+rule "Warn when we have a Playlist with more than one song"
+	when
+		Playlist(songs.size > 1)
+	then
+		System.out.println("We have found a Playlist with more than one song");
+end
+
+
+rule "Warn when we have a POP songs inside a playlist"
+	when
+		$playlist: Playlist($songs: songs)
+		$song: Song(genre == Song.Genre.POP) from $songs
+	then
+		System.out.println("We have found a POP Song ("+$song.getTitle()+") inside a playlist ("+$playlist.getName()+")");
+end
+
+rule "Warn when we have Songs by Johann Sebastian Bach"
+	when		
+		$song: Song($artists: artists)
+                Artist(name == "Johann Sebastian", lastname == "Bach") from $artists
+	then
+		System.out.println("We have found a Song by Bach: "+$song);
+end
+
+// This Rule is not activated. Why? find a way to activate and fire it
+rule "Warn when we have a POP songs and Playlist"
+	when
+        $playlist: Playlist()
+		$song: Song(genre == Song.Genre.POP)
+	then
+		System.out.println("We have found a POP Song ("+$song.getTitle()+") and a playlist: "+$playlist);
+end

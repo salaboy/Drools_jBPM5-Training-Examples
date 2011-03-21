@@ -1,0 +1,20 @@
+package org.plugtree.training
+
+import org.plugtree.training.model.*
+
+rule "Warn when we have a Playlist with more than two songs AND containing 'Thriller'"
+	when
+		$playlist: Playlist(songs.size > 2) AND
+                eval($playlist.containsSong("Thriller"))
+	then
+		System.out.println("We have found a Playlist with more than two songs that contains 'Thriller' ");
+end
+
+
+rule "Warn when we have a Playlist longer than 9000 seconds"
+	when
+		$playlist: Playlist() AND
+                eval($playlist.isLongerThan(9000))
+	then
+		System.out.println("We have found a Playlist longer than 9000 seconds");
+end

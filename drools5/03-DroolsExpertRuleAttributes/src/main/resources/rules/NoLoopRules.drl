@@ -1,0 +1,19 @@
+#no-loop prevents the rule to be activated again if the rule's consequence
+#modifies a fact.
+package org.plugtree.training
+
+import org.plugtree.training.model.*
+import java.util.concurrent.atomic.AtomicInteger
+
+global AtomicInteger index;
+
+
+rule "Number Songs"
+    no-loop
+    when
+        $song : Song()
+    then
+        modify($song){
+            setName(index.getAndIncrement()+"_"+$song.getName());
+        }
+end

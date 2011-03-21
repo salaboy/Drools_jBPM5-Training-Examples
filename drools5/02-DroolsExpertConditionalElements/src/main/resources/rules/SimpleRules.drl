@@ -1,0 +1,23 @@
+package org.plugtree.training
+
+import org.plugtree.training.model.*
+
+rule "Warn when we have a Playlist with more than two songs AND containing 'Thriller'"
+	when
+		$playlist: Playlist($songs: songs, songs.size > 2) AND
+                $song: Song(title == 'Thriller') from $songs
+	then
+		System.out.println("We have found a Playlist with more than two songs that contains 'Thriller' "+$song);
+end
+
+rule "Warn when we have a Playlist with one song OR containing 'Thriller'"
+	when
+		Playlist(songs.size == 1) OR (
+                    $playlist: Playlist($songs: songs) AND
+                    $song: Song(title == 'Thriller') from $songs
+                )
+	then 
+		System.out.println("We have found a Playlist with one song OR containing 'Thriller' ");
+end
+
+

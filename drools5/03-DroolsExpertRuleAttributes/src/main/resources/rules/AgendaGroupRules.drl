@@ -1,0 +1,62 @@
+package org.plugtree.training
+
+import org.plugtree.training.model.*
+import java.util.concurrent.atomic.AtomicInteger
+
+global AtomicInteger index;
+
+rule "Classify Songs"
+    salience 3
+    lock-on-active
+    agenda-group "Create Playlist"
+    when
+        $song : Song()
+    then
+        modify($song){
+            setName($song.getGenre()+"_"+$song.getName());
+        }
+end
+
+rule "Fill playlist"
+    salience 1
+    lock-on-active
+    agenda-group "Create Playlist"
+    when
+        $pl : Playlist()
+        $song : Song()
+    then
+        modify($pl){
+            addSong($song);
+        }
+end
+
+rule "Playlist ready"
+    agenda-group "Create Playlist"
+    when
+        Playlist(size == 3)
+    then
+        //Set the focus to "Play playlist" agenda-group
+        kcontext.getKnowledgeRuntime().getAgenda().getAgendaGroup("Play playlist").setFocus();
+end
+
+rule "Number Songs"
+    salience 2
+    lock-on-active
+    agenda-group "Create Playlist"
+    when
+        $song : Song()
+    then
+        modify($song){
+            setName(index.getAndIncrement()+"_"+$song.getName());
+        }
+end
+
+
+
+rule "Play playlist"
+    agenda-group "Play playlist"
+    when
+        $pl : Playlist()
+    then
+        $pl.play();
+end
