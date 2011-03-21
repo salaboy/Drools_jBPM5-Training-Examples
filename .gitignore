@@ -4,3 +4,4 @@ target
 *.iml
 *.ipr
 *.iws
+nb-configuration.xml
