@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<con:soapui-project name="test-drools-server" resourceRoot="" soapui-version="3.5" abortOnError="false" runType="SEQUENTIAL" xmlns:con="http://eviware.com/soapui/config"><con:settings/><con:interface xsi:type="con:WsdlInterface" wsaVersion="NONE" name="CommandExecutorSoapBinding" type="wsdl" bindingName="{http://soap.jax.drools.org/}CommandExecutorSoapBinding" soapVersion="1_1" anonymous="optional" definition="http://localhost:8080/drools-server/kservice/soap?WSDL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><con:settings/><con:definitionCache type="TEXT" rootPart="http://localhost:8080/drools-server/kservice/soap?WSDL"><con:part><con:url>http://localhost:8080/drools-server/kservice/soap?WSDL</con:url><con:content><![CDATA[<wsdl:definitions name="CommandExecutor" targetNamespace="http://soap.jax.drools.org/" xmlns:ns1="http://cxf.apache.org/bindings/xformat" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:tns="http://soap.jax.drools.org/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <wsdl:types>
+    <xsd:schema attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="http://soap.jax.drools.org/">
+      <xsd:element name="execute" type="tns:execute"/>
+      <xsd:complexType name="execute">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="arg0"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:element name="executeResponse" type="tns:executeResponse"/>
+      <xsd:complexType name="executeResponse">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="return" type="xsd:anyType"/>
+        </xsd:sequence>
+      </xsd:complexType>
+    </xsd:schema>
+  </wsdl:types>
+  <wsdl:message name="execute">
+    <wsdl:part element="tns:execute" name="parameters"></wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="executeResponse">
+    <wsdl:part element="tns:executeResponse" name="parameters"></wsdl:part>
+  </wsdl:message>
+  <wsdl:portType name="CommandExecutorPortType">
+    <wsdl:operation name="execute">
+      <wsdl:input message="tns:execute" name="execute"></wsdl:input>
+      <wsdl:output message="tns:executeResponse" name="executeResponse"></wsdl:output>
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="CommandExecutorSoapBinding" type="tns:CommandExecutorPortType">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="execute">
+      <soap:operation soapAction="" style="document"/>
+      <wsdl:input name="execute">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="executeResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="CommandExecutor">
+    <wsdl:port binding="tns:CommandExecutorSoapBinding" name="CommandExecutorPort"></wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>]]></con:content><con:type>http://schemas.xmlsoap.org/wsdl/</con:type></con:part></con:definitionCache><con:endpoints/><con:operation isOneWay="false" action="" name="execute" bindingOperationName="execute" type="Request-Response" outputName="executeResponse" inputName="execute" receivesAttachments="false" sendsAttachments="false" anonymous="optional"><con:settings/><con:call name="InsertMessage"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>http://localhost:8080/drools-server/kservice/soap</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:soap="http://soap.jax.drools.org/">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <soap:execute>
+         <!--Optional:-->
+         <soap:arg0>
+	<![CDATA[
+
+	<batch-execution lookup="ksession1">
+    	<insert out-identifier="message">
+          <org.test.Message>
+            <text>salaboy2</text>
+          </org.test.Message>
+    	</insert>
+    	<fire-all-rules max="-1"/>
+	</batch-execution>
+  	]]]]>><![CDATA[
+</soap:arg0>
+      </soap:execute>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:request><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig mustUnderstand="NONE" version="200508" action="http://soap.jax.drools.org/CommandExecutorPortType/execute"/><con:wsrmConfig version="1.2"/></con:call><con:call name="QueryAllMessages"><con:settings><con:setting id="com.eviware.soapui.impl.wsdl.WsdlRequest@request-headers">&lt;xml-fragment/></con:setting></con:settings><con:encoding>UTF-8</con:encoding><con:endpoint>http://localhost:8080/drools-server/kservice/soap</con:endpoint><con:request><![CDATA[<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:soap="http://soap.jax.drools.org/">
+   <soapenv:Header/>
+   <soapenv:Body>
+      <soap:execute>
+         <soap:arg0>
+		<![CDATA[
+
+	
+    	<batch-execution lookup="ksession1">
+
+    		<query name="get All Messages" out-identifier="messages"/>
+
+		</batch-execution>
+	</batch-execution>
+  	]]]]>><![CDATA[
+
+	 </soap:arg0>
+      </soap:execute>
+   </soapenv:Body>
+</soapenv:Envelope>]]></con:request><con:jmsConfig JMSDeliveryMode="PERSISTENT"/><con:jmsPropertyConfig/><con:wsaConfig mustUnderstand="NONE" version="200508" action="http://soap.jax.drools.org/CommandExecutorPortType/execute"/><con:wsrmConfig version="1.2"/></con:call></con:operation></con:interface><con:properties/><con:wssContainer/></con:soapui-project>
