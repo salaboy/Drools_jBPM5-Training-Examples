@@ -1,0 +1,38 @@
+package com.wordpress.salaboy.humantasks;
+import com.wordpress.salaboy.TaskServerDaemon;
+import org.jbpm.task.service.TaskClient;
+import java.util.HashMap;
+import java.util.Map;
+import org.jbpm.task.Task;
+import org.jbpm.task.User;
+import org.jbpm.process.workitem.wsht.BlockingAddTaskResponseHandler;
+import java.util.Date;
+import java.io.StringReader;
+
+global TaskClient taskClient;
+
+rule "Create Simple Task"
+    no-loop true
+    when
+        $task: Task()
+    then
+        System.out.println("Create a new task!!");
+        BlockingAddTaskResponseHandler addTaskResponseHandler = new BlockingAddTaskResponseHandler();
+        taskClient.addTask($task, null, addTaskResponseHandler);
+        long taskId = addTaskResponseHandler.getTaskId();
+        $task.setId(taskId);
+        update($task);
+
+end
+
+
+rule "Complete a task When we have an user for the task"
+    when
+        $user: User()
+        $task: Task()
+    then
+        System.out.println("Complete task!!");
+        taskClient.start($task.getId(), $user.getId(), null);
+        taskClient.complete($task.getId(), $user.getId(), null, null);
+
+end
