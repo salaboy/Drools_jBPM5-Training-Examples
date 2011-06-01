@@ -1,5 +1,6 @@
 package com.wordpress.salaboy;
 
+
 import java.io.IOException;
 import java.io.Reader;
 import java.util.Date;
@@ -12,7 +13,7 @@ import org.jbpm.task.User;
 import org.jbpm.task.service.TaskServer;
 import org.jbpm.task.service.TaskService;
 import org.jbpm.task.service.TaskServiceSession;
-import org.jbpm.task.service.mina.MinaTaskServer;
+import org.jbpm.task.service.hornetq.HornetQTaskServer;
 import org.mvel2.MVEL;
 import org.mvel2.ParserContext;
 import org.mvel2.compiler.ExpressionCompiler;
@@ -41,7 +42,7 @@ public class TaskServerDaemon {
             taskSession.addUser(new User(userName));
         }
         
-        taskServer = new MinaTaskServer(taskService);
+        taskServer = new HornetQTaskServer(taskService, 5443);
         Thread thread = new Thread(taskServer);
         thread.start();
     }

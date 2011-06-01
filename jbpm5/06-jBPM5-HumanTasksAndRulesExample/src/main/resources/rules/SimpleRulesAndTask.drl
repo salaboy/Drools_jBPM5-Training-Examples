@@ -1,38 +1,74 @@
 package com.wordpress.salaboy.humantasks;
-import com.wordpress.salaboy.TaskServerDaemon;
-import org.jbpm.task.service.TaskClient;
-import java.util.HashMap;
-import java.util.Map;
+
 import org.jbpm.task.Task;
 import org.jbpm.task.User;
-import org.jbpm.process.workitem.wsht.BlockingAddTaskResponseHandler;
-import java.util.Date;
-import java.io.StringReader;
+import com.wordpress.salaboy.*;
+import com.wordpress.salaboy.model.events.*;
 
-global TaskClient taskClient;
 
-rule "Create Simple Task"
+declare PulseEvent
+    @role( event)
+    @expires (10s)
+end
+
+query "getAverage" ()
+    $currentAverage: Average()
+end
+
+rule "Update the Average"
     no-loop true
     when
-        $task: Task()
+     $currentAverage: Average()
+     $average: Number() from accumulate(
+            PulseEvent($value: value) over window:time(5s) from entry-point "pulse-events" 
+             average($value))
     then
-        System.out.println("Create a new task!!");
-        BlockingAddTaskResponseHandler addTaskResponseHandler = new BlockingAddTaskResponseHandler();
-        taskClient.addTask($task, null, addTaskResponseHandler);
-        long taskId = addTaskResponseHandler.getTaskId();
-        $task.setId(taskId);
-        update($task);
-
+        $currentAverage.setValue((Double)$average);
+        update($currentAverage);
+        
 end
 
-
-rule "Complete a task When we have an user for the task"
+rule "Meausure Pulse Event Average and react if threshold is breached"
+    no-loop true
     when
-        $user: User()
+        not(ThresholdBreached())
+        $average: Number() from accumulate(
+            $acc: PulseEvent($value: value) over window:time(5s) from entry-point "pulse-events" 
+             average($value))
         $task: Task()
+        $threshold: Threshold(name == "AverageThreshold", $average > valueUpperThreshold    ||   $average < valueLowerThreshold)
+        
     then
-        System.out.println("Complete task!!");
-        taskClient.start($task.getId(), $user.getId(), null);
-        taskClient.complete($task.getId(), $user.getId(), null, null);
-
+        
+        System.out.println(">>> WARN: The Threshold "+ $threshold + "was breached by = "+$average);
+        System.out.println(">>>  Create a new task!!");
+        Task task = TaskClientHelper.getInstance().addTask($task, null);
+        $task.setId(task.getId());
+        update($task);
+        insert(new ThresholdBreached(task.getId()));
 end
+
+
+rule "If the threshold was breached buy now the average returns to normal cancel the task that was created"
+    no-loop true
+    when
+         $task: Task()
+        $thresholdBreached: ThresholdBreached(taskId == $task.id)
+        $average: Double() from accumulate(
+            $acc: PulseEvent($value: value) over window:time(5s) from entry-point "pulse-events" 
+             average($value))
+       
+        $user: User()
+        $threshold: Threshold(name == "AverageThreshold",  valueUpperThreshold > $average &&   valueLowerThreshold < $average )
+        
+    then
+        
+        System.out.println(">>> WARN: The Threshold "+ $threshold + "now is inside normal values by = "+$average);
+        System.out.println(">>>  Task Not Needed Any More!");
+        System.out.println(">>> Remote task!!");
+        TaskClientHelper.getInstance().forward($task, $user);
+        retract($thresholdBreached);
+        retract($task);
+end
+
+
