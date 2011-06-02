@@ -6,7 +6,7 @@ import com.wordpress.salaboy.*;
 import com.wordpress.salaboy.model.events.*;
 
 
-declare PulseEvent
+declare WaterFlowingEvent
     @role( event)
     @expires (10s)
 end
@@ -20,7 +20,7 @@ rule "Update the Average"
     when
      $currentAverage: Average()
      $average: Number() from accumulate(
-            PulseEvent($value: value) over window:time(5s) from entry-point "pulse-events" 
+            WaterFlowingEvent($value: value) over window:time(5s) from entry-point "water-events" 
              average($value))
     then
         $currentAverage.setValue((Double)$average);
@@ -28,20 +28,18 @@ rule "Update the Average"
         
 end
 
-rule "Meausure Pulse Event Average and react if threshold is breached"
+rule "Meausure WaterFlowing Event Average and react if threshold is breached"
     no-loop true
     when
         not(ThresholdBreached())
         $average: Number() from accumulate(
-            $acc: PulseEvent($value: value) over window:time(5s) from entry-point "pulse-events" 
+            $acc: WaterFlowingEvent($value: value) over window:time(5s) from entry-point "water-events" 
              average($value))
         $task: Task()
         $threshold: Threshold(name == "AverageThreshold", $average > valueUpperThreshold    ||   $average < valueLowerThreshold)
         
     then
         
-        System.out.println(">>> WARN: The Threshold "+ $threshold + "was breached by = "+$average);
-        System.out.println(">>>  Create a new task!!");
         Task task = TaskClientHelper.getInstance().addTask($task, null);
         $task.setId(task.getId());
         update($task);
@@ -55,7 +53,7 @@ rule "If the threshold was breached buy now the average returns to normal cancel
          $task: Task()
         $thresholdBreached: ThresholdBreached(taskId == $task.id)
         $average: Double() from accumulate(
-            $acc: PulseEvent($value: value) over window:time(5s) from entry-point "pulse-events" 
+            $acc: WaterFlowingEvent($value: value) over window:time(5s) from entry-point "water-events" 
              average($value))
        
         $user: User()
@@ -63,9 +61,6 @@ rule "If the threshold was breached buy now the average returns to normal cancel
         
     then
         
-        System.out.println(">>> WARN: The Threshold "+ $threshold + "now is inside normal values by = "+$average);
-        System.out.println(">>>  Task Not Needed Any More!");
-        System.out.println(">>> Remote task!!");
         TaskClientHelper.getInstance().forward($task, $user);
         retract($thresholdBreached);
         retract($task);
