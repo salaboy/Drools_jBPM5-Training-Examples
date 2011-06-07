@@ -1,0 +1,30 @@
+package com.wordpress.salaboy.rete;
+
+import com.wordpress.salaboy.model.*;
+
+
+rule "Match all the persons with name Salaboy"
+    when
+        $person: Person(name == "Salaboy")
+    then
+        System.out.println("Hey I just find "+$person);
+end
+
+rule "Match Person and Address"
+	when 
+		$person: Person(name == "Salaboy")
+		$address: Address(addressLine1 == "nowhere")
+	then
+		System.out.println("Hey I just find " + $person + " and an Address: " + $address );
+end
+
+rule "Match Person and Address using references" 
+
+	when
+		$address: Address(addressLine1 == "nowhere") 
+		$person: Person(name == "Salaboy", address == $address)
+		
+	then
+		System.out.println("Hey I just find " + $person + "that lives in: " + $address );
+end
+

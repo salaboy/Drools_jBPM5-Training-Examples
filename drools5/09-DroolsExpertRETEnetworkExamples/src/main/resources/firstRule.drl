@@ -1,0 +1,12 @@
+package com.wordpress.salaboy.rete;
+
+import com.wordpress.salaboy.model.*;
+
+
+rule "Match all the persons with name Salaboy"
+    when
+        $person: Person(name == "Salaboy")
+    then
+        System.out.println("Hey I just find "+$person);
+end
+

@@ -1,0 +1,13 @@
+#created on: Jun 4, 2011
+package com.wordpress.salaboy.rete;
+
+
+import com.wordpress.salaboy.model.*;
+
+rule "Match Person and Address"
+	when 
+		$person: Person(name == "Salaboy")
+		$address: Address(addressLine1 == "nowhere")
+	then
+		System.out.println("Hey I just find " + $person + " and an Address: " + $address );
+end
