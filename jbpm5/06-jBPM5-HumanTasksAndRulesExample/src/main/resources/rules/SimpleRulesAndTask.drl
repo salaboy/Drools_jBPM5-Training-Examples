@@ -8,7 +8,7 @@ import com.wordpress.salaboy.model.events.*;
 
 declare WaterFlowingEvent
     @role( event)
-    @expires (10s)
+    @expires (10m)
 end
 
 query "getAverage" ()
@@ -19,27 +19,26 @@ rule "Update the Average"
     no-loop true
     when
      $currentAverage: Average()
-     $average: Number() from accumulate(
-            WaterFlowingEvent($value: value) over window:time(5s) from entry-point "water-events" 
-             average($value))
+     $average: Double() from accumulate(
+            WaterFlowingEvent($value: value) over window:time(5s) from entry-point "water-events", 
+            average($value))
     then
-        $currentAverage.setValue((Double)$average);
-        update($currentAverage);
-        
+        $currentAverage.setValue($average);
+        update($currentAverage);    
 end
 
 rule "Meausure WaterFlowing Event Average and react if threshold is breached"
     no-loop true
     when
         not(ThresholdBreached())
-        $average: Number() from accumulate(
-            $acc: WaterFlowingEvent($value: value) over window:time(5s) from entry-point "water-events" 
+        $threshold: Threshold(name == "AverageThreshold", $valueUpperThreshold:valueUpperThreshold, $valueLowerThreshold: valueLowerThreshold)
+        $average: Double( doubleValue > $valueUpperThreshold || < $valueLowerThreshold ) from accumulate(
+            $acc: WaterFlowingEvent($value: value) over window:time(5s) from entry-point "water-events", 
              average($value))
         $task: Task()
-        $threshold: Threshold(name == "AverageThreshold", $average > valueUpperThreshold    ||   $average < valueLowerThreshold)
+        $user: User()
         
     then
-        
         Task task = TaskClientHelper.getInstance().addTask($task, null);
         $task.setId(task.getId());
         update($task);
@@ -50,14 +49,16 @@ end
 rule "If the threshold was breached buy now the average returns to normal cancel the task that was created"
     no-loop true
     when
-         $task: Task()
-        $thresholdBreached: ThresholdBreached(taskId == $task.id)
-        $average: Double() from accumulate(
-            $acc: WaterFlowingEvent($value: value) over window:time(5s) from entry-point "water-events" 
+    	
+        $threshold: Threshold(name == "AverageThreshold",  $valueUpperThreshold: valueUpperThreshold,  $valueLowerThreshold: valueLowerThreshold )
+        $average: Double(doubleValue < $valueUpperThreshold && > $valueLowerThreshold) from accumulate(
+            $acc: WaterFlowingEvent($value: value) over window:time(5s) from entry-point "water-events" ,
              average($value))
-       
+        $task: Task()
+        $thresholdBreached: ThresholdBreached(taskId == $task.id)
+        
         $user: User()
-        $threshold: Threshold(name == "AverageThreshold",  valueUpperThreshold > $average &&   valueLowerThreshold < $average )
+       
         
     then
         

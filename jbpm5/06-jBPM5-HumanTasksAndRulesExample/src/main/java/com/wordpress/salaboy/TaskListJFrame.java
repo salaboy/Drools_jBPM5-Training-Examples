@@ -11,6 +11,7 @@
 package com.wordpress.salaboy;
 
 import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -21,21 +22,20 @@ import javax.swing.table.DefaultTableModel;
 import org.drools.KnowledgeBase;
 import org.drools.KnowledgeBaseConfiguration;
 import org.drools.KnowledgeBaseFactory;
-
 import org.drools.builder.KnowledgeBuilder;
 import org.drools.builder.KnowledgeBuilderError;
 import org.drools.builder.KnowledgeBuilderErrors;
 import org.drools.builder.KnowledgeBuilderFactory;
 import org.drools.builder.ResourceType;
 import org.drools.conf.EventProcessingOption;
-
+import org.drools.event.rule.DebugAgendaEventListener;
 import org.drools.io.impl.ClassPathResource;
+import org.drools.logger.KnowledgeRuntimeLoggerFactory;
 import org.drools.runtime.StatefulKnowledgeSession;
 import org.drools.runtime.rule.FactHandle;
-import org.drools.runtime.rule.QueryResultsRow;
-
-
-
+import org.drools.runtime.rule.LiveQuery;
+import org.drools.runtime.rule.Row;
+import org.drools.runtime.rule.ViewChangedEventListener;
 import org.jbpm.process.workitem.wsht.WSHumanTaskHandler;
 import org.jbpm.task.Task;
 import org.jbpm.task.User;
@@ -49,7 +49,6 @@ public class TaskListJFrame extends javax.swing.JFrame {
 
     private StatefulKnowledgeSession ksession;
     private TaskServerDaemon taskServerDaemon = new TaskServerDaemon();
-    
     private FactHandle thresholdFactHandle;
 
     /** Creates new form TaskListJFrame */
@@ -58,19 +57,16 @@ public class TaskListJFrame extends javax.swing.JFrame {
         taskServerDaemon.startServer();
         ksession = createSession();
 
-        //Force Init
+
         TaskClientHelper.getInstance();
 
-        //query = ksession.openLiveQuery("getAverage", new Object[]{}, list);
 
-
-
-        new Thread(new Runnable() {
-
-            public void run() {
-                ksession.fireUntilHalt();
-            }
-        }).start();
+//        new Thread(new Runnable() {
+//
+//            public void run() {
+//                ksession.fireUntilHalt();
+//            }
+//        }).start();
 
 
 
@@ -79,6 +75,37 @@ public class TaskListJFrame extends javax.swing.JFrame {
         thresholdFactHandle = ksession.insert(avgThreshold);
         ksession.insert(new User("salaboy"));
 
+        final List updated = new ArrayList();
+
+        final List removed = new ArrayList();
+
+        final List added = new ArrayList();
+
+
+        ViewChangedEventListener listener = new ViewChangedEventListener() {
+
+            public void rowUpdated(Row row) {
+                averageRealTimejLabel.setText(((Average) row.get("$currentAverage")).getValue().toString());
+                updated.add(row.get("$currentAverage"));
+
+            }
+
+            public void rowRemoved(Row row) {
+
+                removed.add(row.get("$currentAverage"));
+
+            }
+
+            public void rowAdded(Row row) {
+
+                added.add(row.get("$currentAverage"));
+
+            }
+        };
+
+        LiveQuery query = ksession.openLiveQuery("getAverage",
+                new Object[]{},
+                listener);
 
     }
 
@@ -232,7 +259,7 @@ public class TaskListJFrame extends javax.swing.JFrame {
 
         jLabel5.setText("Time:");
 
-        avgrefreshjTextField.setText("1000");
+        avgrefreshjTextField.setText("2000");
 
         refreshAveragejCheckBox.setText("auto");
         refreshAveragejCheckBox.addActionListener(new java.awt.event.ActionListener() {
@@ -462,18 +489,21 @@ public class TaskListJFrame extends javax.swing.JFrame {
     }
 
     private void refreshAverageQuery() {
-        org.drools.runtime.rule.QueryResults results =
-                ksession.getQueryResults("getAverage", new Object[]{});
-
-        for (QueryResultsRow row : results) {
-            averageRealTimejLabel.setText(((Average) row.get("$currentAverage")).getValue().toString());
-        }
+//        org.drools.runtime.rule.QueryResults results =
+//                ksession.getQueryResults("getAverage", new Object[]{});
+//
+//        for (QueryResultsRow row : results) {
+//            averageRealTimejLabel.setText(((Average) row.get("$currentAverage")).getValue().toString());
+//        }
+//        
+//        
     }
 
     private void sendEvent() throws NumberFormatException {
-        // TODO add your handling code here:
-        
-        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(eventValuejSlider.getValue()));
+
+
+        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(Double.valueOf(eventValuejSlider.getValue())));
+        ksession.fireAllRules();
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
@@ -481,16 +511,15 @@ public class TaskListJFrame extends javax.swing.JFrame {
     }
 
     private void refreshTable() {
-        // TODO add your handling code here:
+
 
 
         List<TaskSummary> tasks = TaskClientHelper.getInstance().getAssignedTasksByUser("salaboy");
 
 
         DefaultTableModel tableModel = new javax.swing.table.DefaultTableModel(
-                new Object[][]{},
                 new String[]{
-                    "Id", "Task Name",}) {
+                    "Id", "Task Name"}, 0) {
 
             Class[] types = new Class[]{
                 java.lang.Number.class,
@@ -515,7 +544,7 @@ public class TaskListJFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void autojCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_autojCheckBoxActionPerformed
-        
+
         if (autojCheckBox.isSelected()) {
             Thread refreshThread = new Thread(new Runnable() {
 
@@ -558,7 +587,7 @@ public class TaskListJFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_autoeventjCheckBoxActionPerformed
 
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
-        
+
         Map<String, Object> vars = new HashMap();
         Map<String, User> users = new HashMap<String, User>();
         for (String user : taskServerDaemon.getDefaultUsers()) {
@@ -607,13 +636,11 @@ public class TaskListJFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_refreshAveragejCheckBoxActionPerformed
 
     private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
-        
+
         ksession.update(thresholdFactHandle, new Threshold("AverageThreshold", thresholdValuejSlider.getValue(), -1));
     }//GEN-LAST:event_jButton5ActionPerformed
 
     private void averageRealTimejLabelPropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_averageRealTimejLabelPropertyChange
-        
-        
     }//GEN-LAST:event_averageRealTimejLabelPropertyChange
 
     /**
@@ -662,7 +689,7 @@ public class TaskListJFrame extends javax.swing.JFrame {
     private javax.swing.JSlider thresholdValuejSlider;
     // End of variables declaration//GEN-END:variables
 
-    public StatefulKnowledgeSession createSession() {
+    private StatefulKnowledgeSession createSession() {
         KnowledgeBuilder kbuilder = KnowledgeBuilderFactory.newKnowledgeBuilder();
 
         //Adds resources to the builder
@@ -683,14 +710,13 @@ public class TaskListJFrame extends javax.swing.JFrame {
         kbaseConf.setOption(EventProcessingOption.STREAM);
         KnowledgeBase kbase = KnowledgeBaseFactory.newKnowledgeBase(kbaseConf);
         kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());
-     
+
         StatefulKnowledgeSession myksession = kbase.newStatefulKnowledgeSession();
         myksession.getWorkItemManager().registerWorkItemHandler("Human Task", new WSHumanTaskHandler());
-     
+        KnowledgeRuntimeLoggerFactory.newConsoleLogger(myksession);
+        myksession.addEventListener(new DebugAgendaEventListener());
 
         return myksession;
 
     }
-
-    
 }

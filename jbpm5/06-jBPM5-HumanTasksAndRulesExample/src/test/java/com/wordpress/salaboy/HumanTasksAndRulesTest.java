@@ -4,6 +4,8 @@
  */
 package com.wordpress.salaboy;
 
+import java.util.List;
+import org.jbpm.task.query.TaskSummary;
 import java.io.StringReader;
 import java.util.Date;
 import java.util.HashMap;
@@ -24,6 +26,7 @@ import org.drools.logger.KnowledgeRuntimeLoggerFactory;
 import org.drools.runtime.KnowledgeSessionConfiguration;
 import org.drools.runtime.StatefulKnowledgeSession;
 import org.drools.runtime.conf.ClockTypeOption;
+import org.drools.runtime.rule.QueryResultsRow;
 import org.drools.time.SessionPseudoClock;
 import org.jbpm.process.workitem.wsht.WSHumanTaskHandler;
 import org.jbpm.task.Task;
@@ -31,6 +34,7 @@ import org.jbpm.task.User;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import static org.junit.Assert.*;
 
 /**
  *
@@ -84,11 +88,8 @@ public class HumanTasksAndRulesTest {
         ksessionConf.setOption(ClockTypeOption.get("pseudo"));
         final StatefulKnowledgeSession ksession = kbase.newStatefulKnowledgeSession(ksessionConf, null);
         ksession.getWorkItemManager().registerWorkItemHandler("Human Task", new WSHumanTaskHandler());
-       KnowledgeRuntimeLoggerFactory.newConsoleLogger(ksession); 
-       // ksession.addEventListener(new DebugWorkingMemoryEventListener());
-        ksession.addEventListener(new DebugAgendaEventListener());
-        
-        
+        KnowledgeRuntimeLoggerFactory.newConsoleLogger(ksession); 
+     //   ksession.addEventListener(new DebugAgendaEventListener());
         //Force Init
         TaskClientHelper.getInstance();
         
@@ -96,115 +97,126 @@ public class HumanTasksAndRulesTest {
         
         Task task = createTask();
 
-        new Thread(new Runnable() {
-
-            public void run() {
-                ksession.fireUntilHalt();
-            }
-        }).start();
+//        new Thread(new Runnable() {
+//
+//            public void run() {
+//                ksession.fireUntilHalt();
+//            }
+//        }).start();
         
+        
+        // Insert Tasks
         ksession.insert(task);
+        // Insert Average
+        ksession.insert(new Average(0.0));
         
-        Threshold avgThreshold = new Threshold("AverageThreshold", 2, -2);
+        //Create and Insert Threshold
+        Threshold avgThreshold = new Threshold("AverageThreshold", 2, -1);
         ksession.insert(avgThreshold);
-
+        
+        //Insert User
         ksession.insert(new User("salaboy"));
         clock = ksession.getSessionClock();
 
+        System.out.println(">>> Time "+clock.getCurrentTime());        
+        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(10.0));
+        ksession.fireAllRules();
+        clock.advanceTime(1000, TimeUnit.MILLISECONDS);
+        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(10.0));
+        ksession.fireAllRules();
+        clock.advanceTime(1000, TimeUnit.MILLISECONDS);
+        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(10.0));
+        ksession.fireAllRules();
+        clock.advanceTime(1000, TimeUnit.MILLISECONDS);
+        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(10.0));
+        ksession.fireAllRules();
+        clock.advanceTime(1000, TimeUnit.MILLISECONDS);
+        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(10.0));
+        ksession.fireAllRules();
+        clock.advanceTime(1000, TimeUnit.MILLISECONDS);
+        System.out.println(">>> Time "+clock.getCurrentTime());
+        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(10.0));
+        ksession.fireAllRules();
+        clock.advanceTime(1000, TimeUnit.MILLISECONDS);
+        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(10.0));
+        ksession.fireAllRules();
+        clock.advanceTime(1000, TimeUnit.MILLISECONDS);
+        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(10.0));
+        ksession.fireAllRules();
+        clock.advanceTime(1000, TimeUnit.MILLISECONDS);
+        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(10.0));
+        ksession.fireAllRules();
+        clock.advanceTime(1000, TimeUnit.MILLISECONDS);
+        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(10.0));
+        ksession.fireAllRules();
+        clock.advanceTime(1000, TimeUnit.MILLISECONDS);
+        System.out.println(">>> Time "+clock.getCurrentTime());
+        
+        
+        org.drools.runtime.rule.QueryResults results =
+                ksession.getQueryResults("getAverage", new Object[]{});
 
+        for (QueryResultsRow row : results) {
+            System.out.println(">>> Current Average: "+((Average) row.get("$currentAverage")).getValue().toString());
+            assertEquals("10.0", ((Average) row.get("$currentAverage")).getValue().toString());
+        }
+        
+        Thread.sleep(3000);
+        
+        List<TaskSummary> tasks = TaskClientHelper.getInstance().getAssignedTasksByUser("salaboy");
+        assertEquals(1, tasks.size());
+        System.out.println(">>> Current Assigned Tasks: "+tasks.get(0).getName());
+        
+        System.out.println(">>> Time "+clock.getCurrentTime());        
+        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(1.0));
+        ksession.fireAllRules();
+        clock.advanceTime(1000, TimeUnit.MILLISECONDS);
+        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(1.0));
+        ksession.fireAllRules();
+        clock.advanceTime(1000, TimeUnit.MILLISECONDS);
+        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(1.0));
+        ksession.fireAllRules();
+        clock.advanceTime(1000, TimeUnit.MILLISECONDS);
+        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(1.0));
+        ksession.fireAllRules();
+        clock.advanceTime(1000, TimeUnit.MILLISECONDS);
+        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(1.0));
+        ksession.fireAllRules();
+        clock.advanceTime(1000, TimeUnit.MILLISECONDS);
+        System.out.println(">>> Time "+clock.getCurrentTime());
+        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(1.0));
+        ksession.fireAllRules();
+        clock.advanceTime(1000, TimeUnit.MILLISECONDS);
+        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(1.0));
+        ksession.fireAllRules();
+        clock.advanceTime(1000, TimeUnit.MILLISECONDS);
+        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(1.0));
+        ksession.fireAllRules();
+        clock.advanceTime(1000, TimeUnit.MILLISECONDS);
+        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(1.0));
+        ksession.fireAllRules();
+        clock.advanceTime(1000, TimeUnit.MILLISECONDS);
+        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(1.0));
+        ksession.fireAllRules();
+        clock.advanceTime(1000, TimeUnit.MILLISECONDS);
         System.out.println(">>> Time "+clock.getCurrentTime());
         
-        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(10));
-        clock.advanceTime(500, TimeUnit.MILLISECONDS);
-        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(10));
-        clock.advanceTime(500, TimeUnit.MILLISECONDS);
-        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(10));
-        clock.advanceTime(500, TimeUnit.MILLISECONDS);
-        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(10));
-        clock.advanceTime(500, TimeUnit.MILLISECONDS);
-        System.out.println(">>> Time "+clock.getCurrentTime());
-        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(10));
-        clock.advanceTime(500, TimeUnit.MILLISECONDS);
-        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(10));
-        clock.advanceTime(500, TimeUnit.MILLISECONDS);
-        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(10));
-        clock.advanceTime(500, TimeUnit.MILLISECONDS);
-        clock.advanceTime(1500, TimeUnit.MILLISECONDS);
-        System.out.println(">>> Time "+clock.getCurrentTime());
-        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(10));
-        clock.advanceTime(500, TimeUnit.MILLISECONDS);
-        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(10));
-        clock.advanceTime(500, TimeUnit.MILLISECONDS);
-        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(10));
-        clock.advanceTime(500, TimeUnit.MILLISECONDS);
-        clock.advanceTime(1500, TimeUnit.MILLISECONDS);
-        System.out.println(">>> Time "+clock.getCurrentTime());
-        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(10));
-        clock.advanceTime(500, TimeUnit.MILLISECONDS);
-        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(10));
-        clock.advanceTime(500, TimeUnit.MILLISECONDS);
-        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(10));
-        clock.advanceTime(500, TimeUnit.MILLISECONDS);
-        System.out.println(">>> Time "+clock.getCurrentTime());
-        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(10));
-        clock.advanceTime(500, TimeUnit.MILLISECONDS);
-        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(10));
+        results = ksession.getQueryResults("getAverage", new Object[]{});
+
+        Thread.sleep(3000);
         
+        for (QueryResultsRow row : results) {
+            System.out.println(">>> Current Average: "+((Average) row.get("$currentAverage")).getValue().toString());
+            assertEquals("1.0", ((Average) row.get("$currentAverage")).getValue().toString());
+        }
         
-        clock.advanceTime(1500, TimeUnit.MILLISECONDS);
-        clock.advanceTime(1500, TimeUnit.MILLISECONDS);
-        clock.advanceTime(1500, TimeUnit.MILLISECONDS);
-//        clock.advanceTime(500, TimeUnit.MILLISECONDS);
-//        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(9));
-//        clock.advanceTime(500, TimeUnit.MILLISECONDS);
-//        System.out.println(">>> Time "+clock.getCurrentTime());
-//        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(8));
-//        clock.advanceTime(500, TimeUnit.MILLISECONDS);
-//        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(7));
-//        clock.advanceTime(500, TimeUnit.MILLISECONDS);
-//        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(6));
-//        clock.advanceTime(500, TimeUnit.MILLISECONDS);
-//        System.out.println(">>> Time "+clock.getCurrentTime());
-//        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(2));
-//        clock.advanceTime(500, TimeUnit.MILLISECONDS);
-//        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(2));
-//        clock.advanceTime(500, TimeUnit.MILLISECONDS);
-//        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(1));
-//        clock.advanceTime(500, TimeUnit.MILLISECONDS);
-//        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(1));
-//        clock.advanceTime(500, TimeUnit.MILLISECONDS);
-//        System.out.println(">>> Time "+clock.getCurrentTime());
-//        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(1));
-//        clock.advanceTime(500, TimeUnit.MILLISECONDS);
-//        
-//        
-//         ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(1));
-//        clock.advanceTime(500, TimeUnit.MILLISECONDS);
-//        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(1));
-//        clock.advanceTime(500, TimeUnit.MILLISECONDS);
-//        System.out.println(">>> Time "+clock.getCurrentTime());
-//        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(1));
-//        clock.advanceTime(500, TimeUnit.MILLISECONDS);
-//        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(1));
-//        clock.advanceTime(500, TimeUnit.MILLISECONDS);
-//        System.out.println(">>> Time "+clock.getCurrentTime());
-//        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(1));
-//        clock.advanceTime(500, TimeUnit.MILLISECONDS);
-//        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(1));
-//        clock.advanceTime(500, TimeUnit.MILLISECONDS);
-//        System.out.println(">>> Time "+clock.getCurrentTime());
-//        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(1));
-//        clock.advanceTime(500, TimeUnit.MILLISECONDS);
-//        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(1));
-//        clock.advanceTime(500, TimeUnit.MILLISECONDS);
-//        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(1));
-//        clock.advanceTime(500, TimeUnit.MILLISECONDS);
-//        System.out.println(">>> Time "+clock.getCurrentTime());
-//        ksession.getWorkingMemoryEntryPoint("water-events").insert(new WaterFlowingEvent(1));
-//        clock.advanceTime(500, TimeUnit.MILLISECONDS);
+        Thread.sleep(3000);
         
+        tasks = TaskClientHelper.getInstance().getAssignedTasksByUser("salaboy");
+        assertEquals(0, tasks.size());
+        System.out.println(">>> I don't have any task assigned now!");
         
-        Thread.sleep(5000);
+        Thread.sleep(3000);
     }
 
     private Task createTask() {
@@ -219,9 +231,11 @@ public class HumanTasksAndRulesTest {
         vars.put("now", new Date());
 
         String str = "(with (new Task()) { priority = 55, taskData = (with( new TaskData()) { workItemId = 1 } ), ";
-        str += "peopleAssignments = (with ( new PeopleAssignments() ) { potentialOwners = [users['salaboy']], }),";
+        str += "peopleAssignments = (with ( new PeopleAssignments() ) { potentialOwners = [users['salaboy']], recipients = [users['Administrator']] }),";
+        str += "descriptions = [ new I18NText( 'en-UK', 'This is my description')], ";
+	str += "subjects = [ new I18NText( 'en-UK', 'This is my subject')], ";
         str += "names = [ new I18NText( 'en-UK', 'This is my task name')] })";
-
+        
 
         Task task = (Task) TaskServerDaemon.eval(new StringReader(str), vars);
         return task;

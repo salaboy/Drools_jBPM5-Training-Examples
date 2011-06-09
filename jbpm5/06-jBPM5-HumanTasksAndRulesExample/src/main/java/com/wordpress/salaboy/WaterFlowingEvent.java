@@ -15,10 +15,10 @@ public class WaterFlowingEvent implements Serializable{
     private static final long serialVersionUID = 1L;
     
     private boolean processed;
-    private int value;
+    private Double value;
     
 
-    public WaterFlowingEvent(int value) {
+    public WaterFlowingEvent(Double value) {
         this.value = value;
     }
 
@@ -30,7 +30,7 @@ public class WaterFlowingEvent implements Serializable{
         return processed;
     }
 
-    public int getValue() {
+    public Double getValue() {
         return value;
     }
 
@@ -61,7 +61,7 @@ public class WaterFlowingEvent implements Serializable{
     public int hashCode() {
         int hash = 7;
         hash = 97 * hash + (this.processed ? 1 : 0);
-        hash = 97 * hash + this.value;
+        hash = (int) (97 * hash + this.value);
         return hash;
     }
 
