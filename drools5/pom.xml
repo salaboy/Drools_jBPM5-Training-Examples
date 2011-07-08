@@ -18,7 +18,6 @@
         <module>04-DroolsExpert-Spreadsheet</module>
         <module>05-DroolsExpert-DSLSimple</module>
         <module>06-DroolsExpert-KnowledgeAgent</module>
-        <module>07-DroolsExpert-ConditionalElements</module>
         <module>08-DroolsExpert-ValidationExample</module>
         <module>09-DroolsExpert-RETEnetworkExamples</module>
     </modules>
