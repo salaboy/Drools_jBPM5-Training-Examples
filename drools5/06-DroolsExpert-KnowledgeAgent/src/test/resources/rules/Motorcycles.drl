@@ -1,0 +1,43 @@
+package org.plugtree.training.rules
+
+import org.plugtree.training.model.Vehicle
+import org.plugtree.training.model.Insurance
+import org.plugtree.training.enums.VehicleType
+import org.plugtree.training.enums.InsuranceType
+
+rule "Motorcycle Insurance Evaluation 00/09 with an owner between 18 and 25 years old"
+	when
+		$v : Vehicle(type==VehicleType.MOTORCYCLE, year >= 2000, owner.age > 18 && < 25)
+	then
+		$v.setInsurance(new Insurance(InsuranceType.FULL, 1, 900f));
+end
+
+rule "Motorcycle Insurance Evaluation 00/09 with an owner older than 25 years old"
+	when
+		$v : Vehicle(type==VehicleType.MOTORCYCLE, year >= 2000, owner.age > 25 )
+	then
+		$v.setInsurance(new Insurance(InsuranceType.NORMAL, 1, 300f));
+end
+
+rule "Motorcycle Insurance Evaluation 90/00"
+	when
+		$v : Vehicle(type==VehicleType.MOTORCYCLE, year >= 1985 && < 2000, owner.age >= 18)
+	then
+		$v.setInsurance(new Insurance(InsuranceType.FULL, 3, 500f));
+end
+
+rule "Older Motorcycle Insurance not Available"
+	salience 100
+	when
+		$v : Vehicle(type==VehicleType.MOTORCYCLE, year < 1985, owner.age >= 18)
+	then
+		$v.setInsurance(new Insurance(InsuranceType.NOT_AVAILABLE));
+end
+
+rule "Any Motorcycle and owner less than 18 years old"
+	salience 100
+	when
+		$v : Vehicle(type==VehicleType.MOTORCYCLE, owner.age < 18)
+	then
+		$v.setInsurance(new Insurance(InsuranceType.NOT_AVAILABLE));
+end

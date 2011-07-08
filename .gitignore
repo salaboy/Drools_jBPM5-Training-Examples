@@ -9,3 +9,7 @@ nb-configuration.xml
 /drools5/02-DroolsExpertConditionalElements/.settings/
 /drools5/02-DroolsExpert-ConditionalElements/.settings/
 /drools5/04-DroolsExpert-Spreadsheet/.settings/
+.classpath
+.settings
+.nb-configurations.xml
+

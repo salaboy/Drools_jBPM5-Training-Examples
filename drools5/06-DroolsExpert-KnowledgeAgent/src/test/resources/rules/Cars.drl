@@ -1,0 +1,28 @@
+package org.plugtree.training.rules
+
+import org.plugtree.training.model.Vehicle
+import org.plugtree.training.model.Insurance
+import org.plugtree.training.enums.VehicleType
+import org.plugtree.training.enums.InsuranceType
+
+rule "Car Insurance Evaluation 00/09"
+	when
+		$v : Vehicle(type==VehicleType.CAR, year >= 2000, owner.age > 18 )
+	then
+		$v.setInsurance(new Insurance(InsuranceType.NORMAL, 1, 300f));
+end
+
+rule "Car Insurance Evaluation 90/00"
+	when
+		$v : Vehicle(type==VehicleType.CAR, year >= 1990 && < 2000)
+	then
+		$v.setInsurance(new Insurance(InsuranceType.FULL, 3, 500f));
+end
+
+rule "Older cars not Insurance Available"
+	salience 100
+	when
+		$v : Vehicle(type==VehicleType.CAR, year < 1990)
+	then
+		$v.setInsurance(new Insurance(InsuranceType.NOT_AVAILABLE));
+end
