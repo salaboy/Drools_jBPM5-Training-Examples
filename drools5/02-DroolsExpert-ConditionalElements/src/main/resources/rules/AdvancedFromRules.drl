@@ -1,0 +1,60 @@
+package org.plugtree.training
+
+import org.plugtree.training.model.*
+
+global org.hibernate.Session session;
+global java.util.List list;
+global java.util.List songsFromThe80s;
+
+// Here we use the collectList built in function to collect Songs
+rule "Add Playlists that contains songs with letter 'a' in their titles to the list"
+	when
+            $playlist: Playlist($songs: songs)
+            $match: java.util.List(empty == false) from accumulate(
+                $s: Song(title matches ".*a.*") from $songs,
+                collectList($s)
+            )
+	then
+            System.out.println("Playlist found: "+$playlist);
+            for (int i=0; i<$match.size(); i++){
+                System.out.println("\t-"+$match.get(i));
+            }
+            list.add($playlist.getName());
+end
+// Here we use a custom accumulate function
+rule "Add Playlists that contains songs with letter 'a' using Custom Accumulate Function to the list"
+	when
+            $playlist: Playlist($songs: songs)
+            $match: List(empty == false) from accumulate(
+                $s: Song() from $songs,
+                songsWithALetterOnTheirTitlesFunction($s)
+            )
+	then
+       //   System.out.println("Playlist found: "+$playlist);
+       //   for (int i=0; i<$match.size(); i++){
+       //       System.out.println("\t++"+$match.get(i));         
+       //   }
+       //   list.add($playlist.getName());
+end
+
+
+// Here we use a hibernate session to query external information
+rule "Add Songs from the '80s to the list"
+	when
+            $match: java.util.List(empty == false) from collect(
+                Song(year >= 1980 && < 1990) from session.getNamedQuery("Song.getAll").list()
+            )
+	then
+            System.out.println("80's songs: ");
+            for (int i=0; i<$match.size(); i++){
+                System.out.println("\t"+$match.get(i));
+                songsFromThe80s.add(((Song)$match.get(i)).getTitle());
+            }
+end
+
+
+
+
+
+
+

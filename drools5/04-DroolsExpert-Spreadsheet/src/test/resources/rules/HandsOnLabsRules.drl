@@ -1,0 +1,131 @@
+package org.plugtree.training
+
+import org.plugtree.training.handsonlabs.model.StockItem
+import org.plugtree.training.handsonlabs.model.SpecialOffer
+import org.plugtree.training.handsonlabs.enums.ItemType
+
+global Double samsung_led_price
+global Double samsung_lcd_price
+global Double samsung_tube_price
+
+global Double sony_led_price
+global Double sony_lcd_price
+
+
+// LED - SAMSUNG 
+rule "Mark price on Samsung LED TVs"	
+	no-loop true
+	when
+		$item: StockItem (type == ItemType.LED_TV, brand == "Samsung")
+		not SpecialOffer(type == $item.type, brand == $item.brand)
+	then 
+		modify ($item){
+			setPrice(samsung_led_price);
+		}
+end
+
+rule "Mark promotional price on Samsung LED TVs"	
+	no-loop true
+	when
+		$item: StockItem (type == ItemType.LED_TV, brand == "Samsung")
+		$specialOffer: SpecialOffer(type == $item.type, brand == $item.brand)
+	then 
+		modify ($item){
+			setPrice($specialOffer.getPrice());
+		}
+end
+
+// LCD - SAMSUNG 
+rule "Mark price on Samsung LCD TVs"	
+	no-loop true
+	when
+		$item: StockItem (type == ItemType.LCD_TV, brand == "Samsung")
+		not SpecialOffer(type == $item.type, brand == $item.brand)
+	then 
+		modify ($item){
+			setPrice(samsung_lcd_price);
+		}
+end
+
+rule "Mark promotional price on Samsung LCD TVs"	
+	no-loop true
+	when
+		$item: StockItem (type == ItemType.LCD_TV, brand == "Samsung")
+		$specialOffer: SpecialOffer(type == $item.type, brand == $item.brand)
+	then 
+		modify ($item){
+			setPrice($specialOffer.getPrice());
+		}
+end
+
+// TUBE - SAMSUNG 
+rule "Mark price on Samsung TUBE TVs"	
+	no-loop true
+	when
+		$item: StockItem (type == ItemType.TUBE_TV, brand == "Samsung")
+		not SpecialOffer(type == $item.type, brand == $item.brand)
+	then 
+		modify ($item){
+			setPrice(samsung_tube_price);
+		}
+end
+
+rule "Mark promotional price on Samsung TUBE TVs"	
+	no-loop
+	when
+		$item: StockItem (type == ItemType.TUBE_TV, brand == "Samsung")
+		$specialOffer: SpecialOffer(type == $item.type, brand == $item.brand)
+	then 
+		modify ($item){
+			setPrice($specialOffer.getPrice());
+		}
+end
+
+
+//------------------------------------------------------------------------------------
+
+// LED - SONY 
+rule "Mark price on SONY LED TVs"	
+	no-loop true
+	when
+		$item: StockItem (type == ItemType.LED_TV, brand == "Sony")
+		not SpecialOffer(type == $item.type, brand == $item.brand)
+	then 
+		modify ($item){
+			setPrice(sony_led_price);
+		}
+end
+
+rule "Mark promotional price on SONY LED TVs"	
+	no-loop true
+	when
+		$item: StockItem (type == ItemType.LED_TV, brand == "Sony")
+		$specialOffer: SpecialOffer(type == $item.type, brand == $item.brand)
+	then 
+		modify ($item){
+			setPrice($specialOffer.getPrice());
+		}
+end
+
+// LCD - SONY 
+rule "Mark price on SONY LCD TVs"	
+	no-loop true
+	when
+		$item: StockItem (type == ItemType.LCD_TV, brand == "Sony")
+		not SpecialOffer(type == $item.type, brand == $item.brand)
+	then 
+		modify ($item){
+			setPrice(sony_lcd_price);
+		}
+end
+
+rule "Mark promotional price on SONY LCD TVs"	
+	no-loop true
+	when
+		$item: StockItem (type == ItemType.LCD_TV, brand == "Sony")
+		$specialOffer: SpecialOffer(type == $item.type, brand == $item.brand)
+	then 
+		modify ($item){
+			setPrice($specialOffer.getPrice());
+		}
+end

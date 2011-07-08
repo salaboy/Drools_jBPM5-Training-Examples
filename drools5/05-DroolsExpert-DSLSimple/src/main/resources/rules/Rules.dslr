@@ -1,0 +1,92 @@
+package org.plugtree.training
+
+expander CustomLanguage.dsl
+
+import java.util.ArrayList
+import org.plugtree.training.model.Order
+
+global java.util.List rejectedNational;
+global java.util.List rejectedInternational;
+global java.util.List priorityCustomer;
+
+rule "International USPS Shipping"
+	when
+		There is an Order from an INTERNATIONAL Customer
+		- the shipping is USPS
+		- with an amount that is more or equal than 100
+	then
+		Log : "This order can be delivered through USPS"
+end
+
+rule "International USPS Shipping - Priority Customer"
+	salience 100
+	when
+		There is an Order from an INTERNATIONAL Customer
+		- the shipping is USPS
+		- with an amount that is more or equal than 100
+		Has more than one order
+	then
+		Add to priority customer list
+		Log : "Priority Customer - This order can be delivered through USPS"
+end
+
+rule "International USPS Shipping Rejected"
+	when
+		There is an Order from an INTERNATIONAL Customer
+		- the shipping is USPS
+		- with an amount that is less than 100
+	then
+		Add to rejected international list
+		Log : "Put on rejected list - USPS amount less than 100 usd"
+end
+
+rule "International Express Shipping"
+	when
+		There is an Order from an INTERNATIONAL Customer
+		- the shipping is EXPRESS
+		- with an amount that is more or equal than 100
+	then
+		Log : "This order can be delivered through Express Mail"
+end
+
+rule "International Express Shipping - Priority Customer"
+	salience 100
+	when
+		There is an Order from an INTERNATIONAL Customer
+		- the shipping is EXPRESS
+		- with an amount that is more or equal than 100
+		Has more than one order
+	then
+		Add to priority customer list
+		Log : "Priority Customer - This order can be delivered through Express Mail"
+end
+
+rule "National Express Shipping Not insured"
+	when
+		There is an Order from an NATIONAL Customer
+		- the shipping is EXPRESS
+		- with an amount that is more or equal than 500
+		- not insured
+	then
+		Add to rejected national list
+		Log : "Put on rejected list. This order can be delivered through Express Mail"
+end
+
+rule "National Express Shipping"
+	when
+		There is an Order from an NATIONAL Customer
+		- the shipping is EXPRESS
+		- with an amount that is more or equal than 500
+		- not insured
+	then
+		Log : "This order can be delivered through Express Mail"
+end
+
+rule "National Standard Shipping"
+	when
+		There is an Order from an NATIONAL Customer
+		- the shipping is STANDARD
+	then
+		Log : "This order can be delivered through Standard Mail"
+end
+

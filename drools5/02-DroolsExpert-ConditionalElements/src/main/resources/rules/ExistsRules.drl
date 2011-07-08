@@ -1,0 +1,36 @@
+package org.plugtree.training
+
+import org.plugtree.training.model.*
+
+// Not a single Playlist with more than two songs in our world
+rule "Warn when there are no playlists with more than two songs in my world"
+	when
+		not (Playlist(songs.size > 2))
+	then
+		System.out.println("There are no playlists with more than two songs in my world");
+end
+
+rule "Remove playlists with more than two songs"
+	when
+		$playlist: Playlist(songs.size > 2)
+	then
+		System.out.println($playlist.getName()+ " has "+$playlist.getSongs().size()+" songs. It will be removed.");
+                retract ($playlist);
+end
+
+// At Least one Playlist that contains a michael jackson song
+rule "Warn when we have a Michael Jackson's song is in a playlist"
+    when
+         exists($playlist: Playlist($songs: songs) and
+          Song($artists: artists) from $songs and
+                      Artist(name == "Michael", lastname == "Jackson") from $artists)
+                   
+              
+        
+            
+    then
+        System.out.println("We found a Michael Jackson's song in a playlist");
+end
+
+
+

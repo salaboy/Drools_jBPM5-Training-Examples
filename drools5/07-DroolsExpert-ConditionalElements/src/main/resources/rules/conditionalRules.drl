@@ -1,0 +1,120 @@
+package org.plugtree.training;
+
+import org.plugtree.training.model.*;
+import java.util.ArrayList;
+
+global org.hibernate.Session session;
+
+rule "Older person named Leland"
+	when
+		$person: Person(name=="Leland")
+		eval ($person.isOld())
+	then
+		System.out.println("There is a old person named Leland");
+end
+
+rule "Person named John or Dale"
+	when
+		$person: Person(name=="John" || =="Dale")
+	then
+		System.out.println("We have find a person named: " + $person.getName());
+end
+
+rule "Person Dale and a Cat"
+	when
+		Person(name=="Dale") and Pet(type == Pet.PetType.CAT)
+	then
+		System.out.println("We have find a person and a cat in our world");
+end
+
+rule "In our world we dont have birds, only dogs and cats"
+	dialect "mvel"
+	when
+		$pet: (Pet(type == Pet.PetType.DOG) or Pet(type == Pet.PetType.CAT)) 
+		not (Pet(type == Pet.PetType.BIRD))
+	then
+		System.out.println("In our world without birds we founded a " + $pet.type + " named " + $pet.name);
+end
+
+rule "Twin Peaks minimal staff"
+	when
+		exists (Person(ocupation == Person.OcupationType.STUDENT ))
+		exists (Person(ocupation == Person.OcupationType.FBI_SPECIAL_AGENT ))
+		exists (Person(ocupation == Person.OcupationType.LAWYER ))
+		exists (Person(ocupation == Person.OcupationType.OFFICER ))
+		$palmers: ArrayList( size >= 2 ) from collect ( Person(lastName == "Palmer" ) )
+	then
+		System.out.println("We have the minimal staff for Twin Peaks and " + $palmers.size() + " Palmer characters");
+end
+
+rule "Leland Pets"
+	when
+		$person: Person(name=="Leland")
+		$pet: Pet() from $person.pets
+	then
+		System.out.println("Leland has a " + $pet.getType() + " named " + $pet.getName());
+end
+
+rule "Shop pets count"
+	when
+		$petShop: PetShop()
+		$total: Number( doubleValue > 0 ) from accumulate ($pet: Pet(petShop == $petShop, type==Pet.PetType.MONKEY), count($pet))
+	then
+		System.out.println($petShop.getName() + " has " + $total + " monkeys on local");
+end
+
+rule "PetShop monkeys stock"
+	when
+		$petShop: PetShop()
+		$total: Number( doubleValue >= 0 ) from accumulate ($pet: Pet(petShop==$petShop, type==Pet.PetType.MONKEY) from session.getNamedQuery("getPetsFromPetShopId").setParameter("petShopId", $petShop.getId()).list(), count($pet))
+	then
+		System.out.println($petShop.getName() + " has " + $total + " monkeys on total");
+end
+
+rule "Is Dale Cooper on Town?"
+	salience 1
+	when
+		$person: Person(lastName=="Cooper");
+	then
+		retract ($person);
+		System.out.println("Special Agent Dale Cooper is on Twin Peaks town");
+end
+
+rule "Dale Cooper age verification"
+	when
+		Person(lastName=="Cooper", ocupation==Person.OcupationType.FBI_SPECIAL_AGENT)
+	then
+		System.out.println("Special Agent Dale Cooper has more than 18 years");
+end
+
+rule "Maddog PetShop must be closed"
+	no-loop
+	when
+		$petShop: PetShop(name=="Maddog")
+	then
+		modify ($petShop) {
+			setHabilited(false);
+		}
+		update($petShop);
+end
+
+rule "authority contact 1"
+	agenda-group "first fbi"
+	auto-focus true 
+	when
+		$leland: Person(name=="Leland", lastName=="Palmer")
+		$dale: Person(name=="Dale", lastName=="Cooper")
+	then
+		System.out.println("First inform to FBI Agent Dale Cooper");
+		kcontext.getKnowledgeRuntime().getAgenda().getAgendaGroup("then local police").setFocus();
+end
+
+rule "authority contact 2"
+	agenda-group "then local police"
+	when
+		$leland: Person(name=="Leland", lastName=="Palmer")
+		$harry: Person(name=="Harry", lastName=="Truman")
+	then
+		System.out.println("Then informe to Officer Harry Truman");
+end
+
