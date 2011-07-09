@@ -1,0 +1,95 @@
+package org.plugtree.training
+
+import org.plugtree.training.billing.model.Bill;
+import org.plugtree.training.billing.model.Procedure;
+
+global java.util.List errors;
+
+//Scenario 1
+rule "More than one 'Room Charge' billed in the same day"
+when
+    Bill($procedures: procedures)
+    $p1:Procedure(this memberOf $procedures, $code: code matches "80.*", $date: date)
+    exists (
+        Procedure(this memberOf $procedures, this != $p1, code == $code, date == $date)
+    )
+then
+    errors.add("More than one 'Room Charge' procedure billed in a single day "+$date);
+end
+
+
+//Scenario 2
+rule "Procedures billed outside the hospitalization period"
+when
+    Bill($procedures: procedures, $admissionDate: admissionDate, $dischargeDate: dischargeDate)
+    $p1:Procedure(this memberOf $procedures, $code: code, $date: date < $admissionDate || > $dischargeDate)
+then
+    errors.add("Procedure “" + $code + "“ in date “" + $date + "“ is billed outside the hospitalization period");
+end
+
+
+//Scenario 3
+rule "Bill without procedures"
+when
+    Bill(procedures.size == 0)
+then
+    errors.add("Bills without procedures are not allowed");
+end
+
+
+//Scenario 4
+rule "The amount of 'Room Charges' must match the number of hospitalization's days"
+when
+    Bill($days:totalDays, $procedures: procedures, dischargeReason != "Died")
+    $n: Number(doubleValue != $days) from accumulate(
+        $p: Procedure( this memberOf $procedures, code matches "80.*" ),
+        count($p)
+    )
+then
+    errors.add("Number of days is inconsistent with the period of hospitalization. "+$days+" != "+$n);
+end
+
+rule "The amount of 'Room Charges' must match the number of hospitalization's days (Died)."
+when
+    Bill($days:totalDays, $procedures: procedures, dischargeReason == "Died")
+    $n: Number(doubleValue != ($days-1)) from accumulate(
+        $p: Procedure( this memberOf $procedures, code matches "80.*" ),
+        count($p)
+    )
+then
+    errors.add("Number of days is inconsistent with the period of hospitalization. Patient has died. "+$days+" != "+$n);
+end
+
+
+//Scenario 5
+rule "The quantity of 'Room Charge' procedures billed on a day must always be 1"
+when
+    Procedure(code matches "80.*", quantity != 1, $code: code, $date: date)
+then
+    errors.add("Billed quantity for 'Room Date' procedure in date “"+ $date +"“ should be 1");
+end
+
+
+//Scenario 6
+rule "A procedure with a code starting with 1010 can't be billed with another procedure starting with 2020, unless there is also a procedure starting by 3030 in the same date"
+when
+    Bill($procedures: procedures)
+    Procedure( this memberOf $procedures, code == "1010", $date1010: date)
+    Procedure( this memberOf $procedures, code == "2020", date == $date1010)
+    not (Procedure( this memberOf $procedures, code == "3030", date == $date1010))
+then
+    errors.add("Procedure ”1010“ can not be billed with the procedure “2020“ without the procedure “3030“");
+end
+
+
+//Scenario 7
+rule "If there is a charge of a procedure beginning with 4040,  there can't be a procedure beginning with 5050 in the same bill"
+when
+    Bill($procedures: procedures)
+    exists (
+        Procedure( this memberOf $procedures, code == "4040") and
+        Procedure( this memberOf $procedures, code == "5050")
+    )
+then
+    errors.add("Procedure “4040“ cant be billed along with procedure “5050“");
+end
