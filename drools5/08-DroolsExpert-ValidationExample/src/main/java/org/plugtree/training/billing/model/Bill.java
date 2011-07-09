@@ -1,4 +1,4 @@
-package org.plugtree.training.model;
+package org.plugtree.training.billing.model;
 
 import java.util.ArrayList;
 import java.util.Date;

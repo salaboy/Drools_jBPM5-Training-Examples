@@ -23,16 +23,16 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.plugtree.training.model.Bill;
-import org.plugtree.training.model.Procedure;
+import org.plugtree.training.billing.model.Bill;
+import org.plugtree.training.billing.model.Procedure;
 
 /**
  *
  * @author esteban
  */
-public class BillingDataVerificationTest {
+public class BillingDataValidationTest {
 
-    public BillingDataVerificationTest() {
+    public BillingDataValidationTest() {
     }
 
     @BeforeClass
@@ -45,7 +45,7 @@ public class BillingDataVerificationTest {
     @Test
     public void doNothing(){}
     
-    @Ignore
+    @Test
     public void case1Fail() {
 
         DateMidnight admission = new DateMidnight(2010, 5, 4);
@@ -80,7 +80,7 @@ public class BillingDataVerificationTest {
         ksession.dispose();
     }
 
-    @Ignore
+    @Test
     public void case1Ok() {
         DateMidnight admission = new DateMidnight(2010, 5, 4);
         DateMidnight discharge = new DateMidnight(2010, 5, 6);
@@ -132,7 +132,7 @@ public class BillingDataVerificationTest {
         ksession.dispose();
     }
 
-    @Ignore
+    @Test
     public void case2() {
         DateMidnight d4 = new DateMidnight(2010, 5, 4);
         DateMidnight d5 = new DateMidnight(2010, 5, 5);
@@ -195,7 +195,7 @@ public class BillingDataVerificationTest {
         ksession.dispose();
     }
 
-    @Ignore
+    @Test
     public void case3() {
         DateMidnight d4 = new DateMidnight(2010, 5, 4);
         DateMidnight d5 = new DateMidnight(2010, 5, 5);
@@ -244,7 +244,7 @@ public class BillingDataVerificationTest {
         ksession.dispose();
     }
 
-    @Ignore
+    @Test
     public void case4() {
         DateMidnight d4 = new DateMidnight(2010, 5, 4);
         DateMidnight d5 = new DateMidnight(2010, 5, 5);
@@ -329,7 +329,7 @@ public class BillingDataVerificationTest {
         ksession.dispose();
     }
 
-    @Ignore
+    @Test
     public void case5() {
         DateMidnight d4 = new DateMidnight(2010, 5, 4);
         DateMidnight d5 = new DateMidnight(2010, 5, 5);
@@ -403,7 +403,7 @@ public class BillingDataVerificationTest {
         ksession.dispose();
     }
 
-    @Ignore
+    @Test
     public void case6() {
         DateMidnight d4 = new DateMidnight(2010, 5, 4);
         DateMidnight d5 = new DateMidnight(2010, 5, 5);
@@ -479,7 +479,7 @@ public class BillingDataVerificationTest {
         ksession.dispose();
     }
 
-    @Ignore
+    @Test
     public void case7() {
         DateMidnight d4 = new DateMidnight(2010, 5, 4);
         DateMidnight d5 = new DateMidnight(2010, 5, 5);
@@ -552,7 +552,7 @@ public class BillingDataVerificationTest {
      */
     private StatefulKnowledgeSession createKSession() {
         KnowledgeBuilder kbuilder = KnowledgeBuilderFactory.newKnowledgeBuilder();
-        kbuilder.add(new ClassPathResource("rules/VerificationRules.drl"), ResourceType.DRL);
+        kbuilder.add(new ClassPathResource("rules/BillingValidationRules.drl"), ResourceType.DRL);
 
         KnowledgeBuilderErrors errors = kbuilder.getErrors();
         if (errors.size() > 0) {
