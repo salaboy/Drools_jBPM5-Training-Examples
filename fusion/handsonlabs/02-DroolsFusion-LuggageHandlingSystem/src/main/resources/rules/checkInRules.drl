@@ -1,0 +1,45 @@
+package org.plugtree.training;
+
+import org.plugtree.training.model.*;
+import org.plugtree.training.event.*;
+import org.plugtree.training.business.LuggageManager;
+import org.plugtree.training.business.AlertSystem;
+import java.util.ArrayList;
+
+global LuggageManager luggageManager;
+global AlertSystem alertSystem;
+
+declare LuggageReceptionEvent
+    @role (event)
+end
+
+declare CheckInEvent
+    @role (event)
+end
+
+rule "A luggage has not been checked-in after 5 minutes"
+when
+    $lEvent: LuggageReceptionEvent($luggageCode: luggage.code)
+    not (
+        CheckInEvent(luggageCode == $luggageCode, this after [0,5m] $lEvent) from entry-point "check-in-sensors"
+    )
+then
+    alertSystem.addAlert(Alert.AlertType.LUGGAGE_NOT_CHECKED_IN_ON_TIME, (String)$luggageCode, "");
+end
+
+rule "A luggage has been checked-in before 5 minutes of reception"
+when
+    $chkEvent: CheckInEvent($luggageCode: luggageCode) from entry-point "check-in-sensors"
+    LuggageReceptionEvent(luggage.code == $luggageCode, this before [0, 5m] $chkEvent)
+    $l: Luggage(code == $luggageCode)
+then
+    $l.setLocation(Luggage.Location.CAROUSEL);
+end
+
+rule "Trying to check-in a non existent luggage"
+when
+    CheckInEvent($luggageCode: luggageCode) from entry-point "check-in-sensors"
+    not (Luggage(code == $luggageCode))
+then
+    alertSystem.addAlert(Alert.AlertType.NON_EXISTENT_LUGGAGE, $luggageCode, "");
+end

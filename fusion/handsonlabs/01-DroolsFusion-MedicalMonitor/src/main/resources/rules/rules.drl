@@ -1,0 +1,29 @@
+package org.plugtree.training;
+
+import org.plugtree.training.model.*;
+import java.util.ArrayList;
+
+global Nurse nurse;
+global Doctor doctor;
+
+declare MonitorEvent
+    @role (event)
+end
+
+rule "High temperature for at least 10 minutes"
+when
+    $ev1: MonitorEvent($p:patient, symptom == MonitorEvent.Symptom.HIGH_TEMPERATURE) from entry-point "bed-events"
+    MonitorEvent(patient == $p, symptom == MonitorEvent.Symptom.HIGH_TEMPERATURE, this after [1s, 10m] $ev1 ) from entry-point "bed-events"
+then
+    Notification notification = new Notification($p, "High temperature for 10 minutes");
+    nurse.addNotification(notification);
+end
+
+rule "High temperature and High blood pressure for at least 10 minutes"
+when
+    $ev1: MonitorEvent($p:patient, symptom == MonitorEvent.Symptom.HIGH_TEMPERATURE) from entry-point "bed-events"
+    MonitorEvent(patient == $p, symptom == MonitorEvent.Symptom.HIGH_BLOOD_PRESSURE, this after [1s, 10m] $ev1 ) from entry-point "bed-events"
+then
+    Notification notification = new Notification($p, "High temperature for 10 minutes");
+    doctor.addNotification(notification);
+end

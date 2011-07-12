@@ -1,0 +1,41 @@
+package org.plugtree.training;
+
+import org.plugtree.training.model.Message;
+
+global org.plugtree.training.server.IRCServerHandler handler
+
+declare Message
+	@role(event)
+	@timestamp(timestamp)
+end
+
+rule "banned words"
+salience 200
+	when
+		$message : Message(processed==false, $userName : userName, content matches "kick|ban|exploit") from entry-point "messages"
+	then
+		handler.notify($userName, new Message("server", "Banned word detected"));
+		retract($message);
+end
+
+rule "flood detection"
+salience 100
+	when
+		$message : Message(processed==false, $userName : userName) from entry-point "messages"
+		Number( intValue > 5 ) from accumulate ($m : Message(userName==$userName) over window:time( 10s )
+												from entry-point "messages",
+        										count( $m ) )
+	then
+		handler.notify($userName, new Message("server", "Flood detected. More than 5 messages in the last 10 seconds"));
+end
+
+rule "message processed"
+salience -100
+	when
+		$message : Message(processed==false, $userName : userName) from entry-point "messages"
+	then
+		modify ($message) {
+			setProcessed(true);
+		}
+end
+	

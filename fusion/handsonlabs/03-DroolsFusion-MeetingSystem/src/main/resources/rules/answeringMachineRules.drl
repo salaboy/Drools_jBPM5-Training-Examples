@@ -1,0 +1,33 @@
+package org.plugtree.training;
+
+import org.plugtree.training.model.*;
+import org.plugtree.training.event.*;
+import java.util.ArrayList;
+
+declare IncomingCallEvent
+    @role (event)
+end
+
+declare MeetingStartEvent
+    @role (event)
+    @duration (duration)
+end
+
+rule "Incoming call to a busy employee"
+when
+    $meetingEvent: MeetingStartEvent($participants: meeting.participants) from entry-point "meetings"
+    $callEvent: IncomingCallEvent(destination memberOf $participants , this during $meetingEvent) from entry-point "incoming-calls"
+then
+    $callEvent.setStatus(IncomingCallEvent.CallStatus.REDIRECTED);
+end
+
+rule "Incoming call to an available employee"
+when
+    $callEvent: IncomingCallEvent($employee: destination) from entry-point "incoming-calls"    
+    not (
+        MeetingStartEvent(meeting.participants contains $employee, this includes $callEvent) from entry-point "meetings"
+        )
+
+then
+    $callEvent.setStatus(IncomingCallEvent.CallStatus.DISPATCHED);
+end

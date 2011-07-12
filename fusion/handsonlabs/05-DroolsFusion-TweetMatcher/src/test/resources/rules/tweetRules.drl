@@ -1,0 +1,18 @@
+package org.plugtree.training;
+
+import org.plugtree.training.Tweet;
+import java.util.ArrayList;
+
+declare Tweet
+    @role(event)
+    @timestamp(createdAt)
+end
+
+rule "Two tweets to close"
+when
+    $s1: Tweet() from entry-point "tweets"
+    $s2: Tweet(this != $s1, this after[0s,35s] $s1) from entry-point "tweets"
+then
+    System.out.println("Two tweets together!");
+end
+
