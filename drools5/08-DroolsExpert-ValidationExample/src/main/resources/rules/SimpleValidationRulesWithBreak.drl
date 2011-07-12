@@ -1,0 +1,43 @@
+package org.plugtree.simple.validation;
+
+import org.plugtree.training.simplevalidation.model.*;
+import org.plugtree.training.simplevalidation.model.control.*;
+
+query "getAllErrors" ()
+    $error: ErrorEntry()
+end
+
+query "getAllErrorsByValidationId" (String currentValidation)
+    $error: ErrorEntry(validationId == currentValidation)
+end
+
+rule "Break if an error exist"
+    when
+        exists(ErrorEntry())
+    then
+        System.out.println(">>> Breaking the validation!!!");
+        kcontext.getKnowledgeRuntime().halt();
+end
+
+
+rule "Check for persons with correct addresses & at least one phone"
+    when
+        $validation: Validation()
+        $person: Person() and
+        (not(Address(personId == $person.id)) or 
+        (not (Phone(personId == $person.id))))
+    then
+        insert(new ErrorEntry($validation.getId(), "No Address or No Phone", $person));
+end
+
+rule "Invalid Address: no number"
+    when
+        $validation: Validation()
+        $address: Address(number == null || == 0)
+    then
+       insert(new ErrorEntry($validation.getId(), "Invalid Address Number",$address)); 
+end
+
+
+
+

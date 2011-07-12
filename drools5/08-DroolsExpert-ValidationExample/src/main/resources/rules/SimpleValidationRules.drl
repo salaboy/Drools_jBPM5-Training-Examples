@@ -1,0 +1,32 @@
+package org.plugtree.simple.validation;
+
+import org.plugtree.training.simplevalidation.model.*;
+import org.plugtree.training.simplevalidation.model.control.*;
+
+
+
+
+query "getAllErrors" ()
+    $error: ErrorEntry()
+end
+
+
+rule "Check for persons with correct addresses & at least one phone"
+    when
+        $person: Person() and
+        (not(Address(personId == $person.id)) or 
+        (not (Phone(personId == $person.id))))
+    then
+        insert(new ErrorEntry("No Address or No Phone", $person));
+end
+
+rule "Invalid Address: no number"
+    when
+        $address: Address(number == null || == 0)
+    then
+       insert(new ErrorEntry("Invalid Address Number",$address)); 
+end
+
+
+
+
