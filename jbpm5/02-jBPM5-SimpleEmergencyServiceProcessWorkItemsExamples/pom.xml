@@ -4,9 +4,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>jbpm5-community-training</groupId>
-    <artifactId>02-emergency.service.workitems.example</artifactId>
-    <version>1.0</version>
+    <parent>
+        <groupId>org.plugtree.training</groupId>
+        <artifactId>jbpm5.training</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+    
+    <artifactId>02-jBPM5SimpleEmergencyServiceProcessWorkItemsExamples</artifactId>
     <packaging>jar</packaging>
     <name>jBPM5 Community Training :: 02 - Emergency Service Process and Work Items Examples</name>
 
@@ -19,17 +23,17 @@
         <dependency>
             <groupId>org.jbpm</groupId>
             <artifactId>jbpm-flow</artifactId>
-            <version>5.0.0</version>
+            <version>${jbpm5.version}</version>
         </dependency>
         <dependency>
             <groupId>org.jbpm</groupId>
             <artifactId>jbpm-bpmn2</artifactId>
-            <version>5.0.0</version>
+            <version>${jbpm5.version}</version>
         </dependency>
         <dependency>
             <groupId>org.jbpm</groupId>
             <artifactId>jbpm-flow-builder</artifactId>
-            <version>5.0.0</version>
+            <version>${jbpm5.version}</version>
         </dependency>
     </dependencies>
  <build>

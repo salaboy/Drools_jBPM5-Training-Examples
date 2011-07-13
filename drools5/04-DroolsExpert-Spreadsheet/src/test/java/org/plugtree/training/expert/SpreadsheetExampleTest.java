@@ -10,6 +10,8 @@ import org.drools.builder.KnowledgeBuilderError;
 import org.drools.builder.KnowledgeBuilderErrors;
 import org.drools.builder.KnowledgeBuilderFactory;
 import org.drools.builder.ResourceType;
+import org.drools.decisiontable.InputType;
+import org.drools.decisiontable.SpreadsheetCompiler;
 import org.drools.io.impl.ClassPathResource;
 import org.drools.runtime.StatefulKnowledgeSession;
 import org.junit.Assert;
@@ -28,6 +30,11 @@ public class SpreadsheetExampleTest  {
         DecisionTableConfiguration dtableconfiguration = KnowledgeBuilderFactory.newDecisionTableConfiguration();
         dtableconfiguration.setInputType(DecisionTableInputType.XLS);
 
+        
+        SpreadsheetCompiler compiler = new SpreadsheetCompiler();
+        String drl = compiler.compile("/rules/CreditRules.xls", InputType.XLS);
+        System.out.println("DRL String:"+drl);
+        
         KnowledgeBuilder kbuilder = KnowledgeBuilderFactory.newKnowledgeBuilder();
         kbuilder.add(new ClassPathResource("/rules/CreditRules.xls", getClass()), ResourceType.DTABLE, dtableconfiguration);
         KnowledgeBuilderErrors errors = kbuilder.getErrors();
@@ -38,9 +45,7 @@ public class SpreadsheetExampleTest  {
             throw new IllegalArgumentException("Could not parse knowledge.");
         }
 
-//        SpreadsheetCompiler compiler = new SpreadsheetCompiler();
-//        String drl = compiler.compile("/rules/CreditRules.xls", InputType.XLS);
-//        System.out.println("DRL String:"+drl);
+    
 //        
         KnowledgeBase kbase = KnowledgeBaseFactory.newKnowledgeBase();
         kbase.addKnowledgePackages(kbuilder.getKnowledgePackages());

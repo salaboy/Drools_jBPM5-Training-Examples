@@ -3,9 +3,13 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
-    <groupId>jbpm5-community-training</groupId>
-    <artifactId>01-simple.emergency.service.example</artifactId>
+     <parent>
+        <groupId>org.plugtree.training</groupId>
+        <artifactId>jbpm5.training</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+    
+    <artifactId>01-jBPM5-SimpleEmergencyServiceProcess</artifactId>
     <version>1.0</version>
     <packaging>jar</packaging>
     <name>jBPM5 Community Training :: 01 - Simple Emergency Service Example</name>
@@ -19,17 +23,17 @@
         <dependency>
             <groupId>org.jbpm</groupId>
             <artifactId>jbpm-flow</artifactId>
-            <version>5.0.0</version>
+            <version>${jbpm5.version}</version>
         </dependency>
         <dependency>
             <groupId>org.jbpm</groupId>
             <artifactId>jbpm-bpmn2</artifactId>
-            <version>5.0.0</version>
+            <version>${jbpm5.version}</version>
         </dependency>
         <dependency>
             <groupId>org.jbpm</groupId>
             <artifactId>jbpm-flow-builder</artifactId>
-            <version>5.0.0</version>
+            <version>${jbpm5.version}</version>
         </dependency>
     </dependencies>
  <build>
@@ -45,15 +49,6 @@
             </plugin>
         </plugins>
     </build>
-
-   <repositories>
-        <repository>
-
-            <id>jboss</id>
-            <name>jboss</name>
-            <url>https://repository.jboss.org/nexus/content/groups/public/</url>
-        </repository>
-    </repositories>
 
     
 </project>

@@ -13,13 +13,7 @@
     <name>Drools5 Community Training :: 04 - Drools Expert Spreadsheet Example</name>
     <url>http://www.plugtree.com</url>
 	
-    <repositories>
-        <repository>
-            <id>JBOSS</id>
-            <name>JBoss Repository</name>
-            <url>https://repository.jboss.org/nexus/content/groups/public</url>
-        </repository>
-    </repositories>
+   
 	
     <dependencies>
         <dependency>
@@ -31,20 +25,20 @@
         <dependency>
             <groupId>org.drools</groupId>
             <artifactId>drools-core</artifactId>
-            <version>5.2.0.M1</version>
-            <optional>false</optional>
+            <version>${drools.version}</version>
+            
         </dependency>
         <dependency>
             <groupId>org.drools</groupId>
             <artifactId>drools-compiler</artifactId>
-            <version>5.2.0.M1</version>
-            <optional>false</optional>
+            <version>${drools.version}</version>
+            
         </dependency>
         <dependency>
             <groupId>org.drools</groupId>
             <artifactId>drools-decisiontables</artifactId>
-            <version>5.2.0.M1</version>
-            <optional>false</optional>
+            <version>${drools.version}</version>
+            
         </dependency>
         <dependency>
             <groupId>junit</groupId>
