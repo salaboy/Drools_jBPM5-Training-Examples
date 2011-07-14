@@ -1,0 +1,22 @@
+package org.plugtree.training;
+
+import twitter4j.Status;
+import java.util.ArrayList;
+
+
+rule "Filtering Tweets"
+when
+    $s1: Status(text == "Arkansas") from entry-point "tweets"
+then
+    System.out.println(">>> Text = "+$s1.getText());
+end
+
+
+rule "Alert"
+when
+    $s1: Status(text == "Arkansas") from entry-point "tweets"
+    $s2: Status(this != $s1, text == "Arkansas", this after[0s,35s] $s1) from entry-point "tweets"
+then
+    System.out.println("Alert: Something is happening in Arkansas>>> Text = "+$s1.getText());
+end
+

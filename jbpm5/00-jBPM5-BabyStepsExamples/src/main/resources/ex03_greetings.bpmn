@@ -23,33 +23,30 @@
       	kcontext.getKnowledgeRuntime().insert(process);      	
       </script>
     </scriptTask>
-    <businessRuleTask id="_3" name="Define Period" g:ruleFlowGroup="define_period" />
-    
+    <businessRuleTask id="_3" name="Define Period" g:ruleFlowGroup="define_period" >
+    </businessRuleTask>
     <exclusiveGateway id="_4" name="Split" gatewayDirection="Diverging" />
-    
     <scriptTask id="_5" name="Morning" >
       <script>
       	System.out.println("good morning ");
       </script>
     </scriptTask>
-    
     <scriptTask id="_6" name="Afternoon" >
       <script>
       	System.out.println("good afternoon");
       </script>
     </scriptTask>
-    
     <scriptTask id="_7" name="Night" >
       <script>
       	System.out.println("good night");
       </script>
     </scriptTask>
-    
     <exclusiveGateway id="_8" name="Split" gatewayDirection="Converging" />
-    
     <endEvent id="_9" name="EndProcess" >
         <terminateEventDefinition/>
     </endEvent>
+    <intermediateCatchEvent id="_10" name="Signal" >
+    </intermediateCatchEvent>
 
     <!-- connections -->
     <sequenceFlow id="_1-_2" sourceRef="_1" targetRef="_2" />
@@ -73,9 +70,7 @@
 	      return "night".equals(process.getVariable("period"));
 	   </conditionExpression>
     </sequenceFlow>
-    <sequenceFlow id="_7-_8" sourceRef="_7" targetRef="_8" />
-    <sequenceFlow id="_6-_8" sourceRef="_6" targetRef="_8" />
-    <sequenceFlow id="_5-_8" sourceRef="_5" targetRef="_8" />
+    <sequenceFlow id="_10-_8" sourceRef="_10" targetRef="_8" />
     <sequenceFlow id="_8-_9" sourceRef="_8" targetRef="_9" />
 
   </process>
@@ -109,6 +104,9 @@
       <bpmndi:BPMNShape bpmnElement="_9" >
         <dc:Bounds x="174" y="401" width="48" height="48" />
       </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="_10" >
+        <dc:Bounds x="90" y="331" width="48" height="48" />
+      </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge bpmnElement="_1-_2" >
         <di:waypoint x="27" y="34" />
         <di:waypoint x="203" y="30" />
@@ -133,16 +131,8 @@
         <di:waypoint x="201" y="180" />
         <di:waypoint x="313" y="256" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge bpmnElement="_7-_8" >
-        <di:waypoint x="313" y="256" />
-        <di:waypoint x="198" y="332" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge bpmnElement="_6-_8" >
-        <di:waypoint x="202" y="257" />
-        <di:waypoint x="198" y="332" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge bpmnElement="_5-_8" >
-        <di:waypoint x="87" y="259" />
+      <bpmndi:BPMNEdge bpmnElement="_10-_8" >
+        <di:waypoint x="114" y="355" />
         <di:waypoint x="198" y="332" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge bpmnElement="_8-_9" >
