@@ -4,12 +4,11 @@
  */
 package org.jbpm.nodes.impl;
 
-import org.jbpm.api.Node;
-
 /**
  *
  * @author salaboy
  */
-public class StartEventNode implements Node {
+public class StartEventNode extends AbstractBaseNode {
+    
     
 }

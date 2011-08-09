@@ -4,8 +4,10 @@
  */
 package org.jbpm;
 
+import org.jbpm.api.Action;
 import org.jbpm.api.ProcessDefinition;
 import org.jbpm.api.ProcessInstance;
+import org.jbpm.api.SequenceFlow;
 import org.jbpm.factories.ProcessInstanceFactory;
 import org.jbpm.api.impl.ProcessDefinitionImpl;
 import org.jbpm.nodes.impl.ActionNode;
@@ -46,12 +48,21 @@ public class SimpleProcessExecutionTest {
     @Test
     public void simpleProcessExecution() {
         ProcessDefinition process = new ProcessDefinitionImpl();
-        process.addNode(0L, new StartEventNode());
-        process.addNode(1L, new ActionNode());
-        process.addNode(2L, new EndEventNode());
+        StartEventNode startEvent = new StartEventNode();
+        process.addNode(0L, startEvent);
+        ActionNode actionNode = new ActionNode(new Action() {
+
+            @Override
+            public void execute() {
+                System.out.println("Executing the Action!!");
+            }
+        });
+        process.addNode(1L, actionNode);
+        EndEventNode endEvent = new EndEventNode();
+        process.addNode(2L, endEvent);
         
-        process.addSequenceFlow(0L, new SequenceFlowImpl(0L, 1L));
-        process.addSequenceFlow(1L, new SequenceFlowImpl(1L, 2L));
+        startEvent.addOutgoingFlow(SequenceFlow.FLOW_DEFAULT_TYPE, new SequenceFlowImpl(SequenceFlow.FLOW_DEFAULT_TYPE, actionNode));
+        actionNode.addOutgoingFlow(SequenceFlow.FLOW_DEFAULT_TYPE, new SequenceFlowImpl(SequenceFlow.FLOW_DEFAULT_TYPE, endEvent));
         
         ProcessInstance processInstance = ProcessInstanceFactory.newProcessInstance(process);
                 

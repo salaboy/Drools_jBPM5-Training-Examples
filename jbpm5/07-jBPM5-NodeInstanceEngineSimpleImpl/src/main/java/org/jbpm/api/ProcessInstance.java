@@ -19,5 +19,10 @@ public interface ProcessInstance {
     
     public ContextInstance getContextInstance();
     
+    public NodeContainer getNodeContainer();
+    
+    
     public void start();
+
+    public void triggerCompleted();
 }

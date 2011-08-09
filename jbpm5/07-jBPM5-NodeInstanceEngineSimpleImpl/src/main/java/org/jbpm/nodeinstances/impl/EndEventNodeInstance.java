@@ -4,29 +4,19 @@
  */
 package org.jbpm.nodeinstances.impl;
 
-import org.jbpm.api.Node;
 import org.jbpm.api.NodeInstance;
 
 /**
  *
  * @author salaboy
  */
-public class EndEventNodeInstance implements NodeInstance {
-
-    private Node node;
-
-    public EndEventNodeInstance() {
-    }
-    
-    
-    @Override
-    public void setNode(Node node) {
-        this.node = node;
-    }
+public class EndEventNodeInstance extends AbstractNodeInstance {
 
     @Override
-    public Node getNode() {
-        return this.node;
+    public void internalTrigger(NodeInstance from, String type) {
+        System.out.println("YOU REACH THE END OF THE PROCESS");
     }
+
+   
     
 }

@@ -4,33 +4,32 @@
  */
 package org.jbpm.nodeinstances.impl;
 
-import org.jbpm.api.Node;
+import org.jbpm.api.Action;
 import org.jbpm.api.NodeInstance;
+import org.jbpm.api.SequenceFlow;
 
 /**
  *
  * @author salaboy
  */
-public class ActionNodeInstance implements NodeInstance{
+public class ActionNodeInstance extends AbstractNodeInstance {
 
-    private Node node;
+    private Action action;
+
+    public ActionNodeInstance(Action action) {
+        this.action = action;
+    }
 
     public ActionNodeInstance() {
     }
-    
-    @Override
-    public void setNode(Node node) {
-        this.node = node;
-    }
 
     @Override
-    public Node getNode() {
-        return node;
+    public void internalTrigger(NodeInstance from, String type) {
+        action.execute();
+        triggerCompleted(SequenceFlow.FLOW_DEFAULT_TYPE, true);
     }
 
-    @Override
-    public void trigger(NodeInstance from, String type) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public Action getAction() {
+        return action;
     }
-    
 }

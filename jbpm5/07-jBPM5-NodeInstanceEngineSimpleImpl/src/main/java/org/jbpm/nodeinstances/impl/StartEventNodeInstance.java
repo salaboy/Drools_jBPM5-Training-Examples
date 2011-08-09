@@ -4,34 +4,53 @@
  */
 package org.jbpm.nodeinstances.impl;
 
-import org.jbpm.api.Node;
 import org.jbpm.api.NodeInstance;
+import org.jbpm.api.SequenceFlow;
 
 /**
  *
  * @author salaboy
  */
-public class StartEventNodeInstance implements NodeInstance {
-
-    private Node node;
-
+public class StartEventNodeInstance extends AbstractNodeInstance {
+    private long id;
+   
+    
+    
     public StartEventNodeInstance() {
     }
  
-    @Override
-    public void setNode(Node node) {
-       this.node = node;
+   
+
+    public long getId() {
+        return id;
     }
 
-    @Override
-    public Node getNode() {
-        return this.node;
+    public void setId(long id) {
+        this.id = id;
     }
 
+   
+
     @Override
-    public void trigger(NodeInstance from, String type) {
-        throw new UnsupportedOperationException("Not supported yet.");
+    public void internalTrigger(NodeInstance from, String type) {
+        if (type != null) {
+            throw new IllegalArgumentException(
+                "A StartNode does not accept incoming connections!");
+        }
+        if (from != null) {
+            throw new IllegalArgumentException(
+                "A StartNode can only be triggered by the process itself!");
+        }
+        triggerCompleted();
     }
+
+    public void triggerCompleted() {
+        triggerCompleted(SequenceFlow.FLOW_DEFAULT_TYPE, true);
+    }
+    
+    
+    
+    
     
     
     

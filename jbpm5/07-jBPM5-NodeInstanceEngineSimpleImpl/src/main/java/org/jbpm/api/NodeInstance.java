@@ -9,7 +9,12 @@ package org.jbpm.api;
  * @author salaboy
  */
 public interface NodeInstance {
+
     public void setNode(Node node);
+
     public Node getNode();
+
     public void trigger(NodeInstance from, String type);
+
+    public ProcessInstance getProcessInstance();
 }

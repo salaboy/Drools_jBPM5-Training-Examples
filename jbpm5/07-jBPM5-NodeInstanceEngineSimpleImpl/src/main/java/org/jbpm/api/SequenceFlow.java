@@ -9,5 +9,13 @@ package org.jbpm.api;
  * @author salaboy
  */
 public interface SequenceFlow {
+    public static final String FLOW_DEFAULT_TYPE = "DEFAULT_FLOW";
     
+    public Node getFrom();
+
+    public Node getTo();
+
+    public String getFromType();
+
+    public String getToType();
 }

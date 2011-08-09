@@ -4,12 +4,22 @@
  */
 package org.jbpm.nodes.impl;
 
-import org.jbpm.api.Node;
+import org.jbpm.api.Action;
 
 /**
  *
  * @author salaboy
  */
-public class ActionNode implements Node{
+public class ActionNode extends AbstractBaseNode {
+    private Action action;
+
+    public ActionNode(Action action) {
+        this.action = action;
+    }
+
+    public Action getAction() {
+        return action;
+    }
+    
     
 }

@@ -4,6 +4,7 @@
  */
 package org.jbpm.nodes.impl;
 
+import org.jbpm.api.Node;
 import org.jbpm.api.SequenceFlow;
 
 /**
@@ -11,29 +12,38 @@ import org.jbpm.api.SequenceFlow;
  * @author salaboy
  */
 public class SequenceFlowImpl implements SequenceFlow{
-    private Long sourceId;
-    private Long destinationId;
+    private Node from;
+    private Node to;
+    private String fromType;
+    private String toType;
 
-    public SequenceFlowImpl(Long sourceId, Long destinationId) {
-        this.sourceId = sourceId;
-        this.destinationId = destinationId;
+    public SequenceFlowImpl(String toType, Node to) {
+        this.to = to;
+        this.toType = toType;
+    }
+    
+    @Override
+    public Node getFrom() {
+        return from;
     }
 
-    public Long getDestinationId() {
-        return destinationId;
+    @Override
+    public Node getTo() {
+        return to;
     }
 
-    public Long getSourceId() {
-        return sourceId;
+    @Override
+    public String getFromType() {
+        return fromType;
     }
 
-    public void setDestinationId(Long destinationId) {
-        this.destinationId = destinationId;
+    @Override
+    public String getToType() {
+        return toType;
     }
+    
 
-    public void setSourceId(Long sourceId) {
-        this.sourceId = sourceId;
-    }
+    
     
     
     

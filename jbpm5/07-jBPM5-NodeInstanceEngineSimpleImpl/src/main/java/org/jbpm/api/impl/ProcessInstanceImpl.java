@@ -11,19 +11,19 @@ import org.jbpm.api.NodeInstance;
 import org.jbpm.api.ProcessDefinition;
 import org.jbpm.api.ProcessInstance;
 import org.jbpm.factories.NodeInstanceFactory;
-import org.jbpm.nodeinstances.impl.StartEventNodeInstance;
-import org.jbpm.nodes.impl.StartEventNode;
 
 /**
  *
  * @author salaboy
  */
 public class ProcessInstanceImpl implements ProcessInstance {
-
+    public enum STATUS  {ACTIVE, SUSPENDED, CANCELLED, ENDED};
     private long id;
     private ProcessDefinition process;
     private ContextInstance context;
     private NodeContainer nodeContainer;
+    private STATUS status;
+    
     public ProcessInstanceImpl() {
     }
 
@@ -51,8 +51,9 @@ public class ProcessInstanceImpl implements ProcessInstance {
     @Override
     public void start() {
         // We should check that the first node inside the process.nodes is a startEventNode
-        StartEventNodeInstance startEventNode = NodeInstanceFactory.newStartEventNodeInstance((StartEventNode)process.getNodes().get(0));
+        NodeInstance startEventNode = NodeInstanceFactory.newNodeInstance(this, process.getNodes().get(0L));
         this.nodeContainer.addNodeInstance(startEventNode);
+        this.status = STATUS.ACTIVE;
         startEventNode.trigger(null, null);
     	
     }
@@ -66,6 +67,21 @@ public class ProcessInstanceImpl implements ProcessInstance {
     public ContextInstance getContextInstance() {
         return context;
     }
+
+    public NodeContainer getNodeContainer() {
+        return nodeContainer;
+    }
+
+    @Override
+    public void triggerCompleted() {
+       this.status = STATUS.ENDED;
+    }
+
+    public STATUS getStatus() {
+        return status;
+    }
+    
+    
     
    
 }
