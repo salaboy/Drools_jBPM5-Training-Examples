@@ -87,7 +87,7 @@ public class AdvancedFromRulesExampleTest {
         Assert.assertTrue(songsFromThe80s.contains("The final countdown"));
         Assert.assertTrue(songsFromThe80s.contains("No For The Inocent"));
 
-        
+        ksession.dispose();
     }
 
     /**

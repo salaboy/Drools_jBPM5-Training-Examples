@@ -5,7 +5,7 @@ import org.plugtree.examples.model.Pet;
 import org.plugtree.examples.model.Firefighter;
 import org.plugtree.examples.model.Pet.PetType;
 
-
+// The rules for the cat in the tree example
 
 rule "Call the fire department"
     when

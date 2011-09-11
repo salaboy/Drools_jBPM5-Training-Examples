@@ -68,6 +68,8 @@ public class SpreadsheetExampleTest  {
         Assert.assertEquals(CreditStatus.ACCEPTED, p1.getCredit().getStatus());
         Assert.assertEquals(CreditStatus.REJECTED, p2.getCredit().getStatus());
         Assert.assertEquals(CreditStatus.REJECTED, p2.getCredit().getStatus());
+        
+        ksession.dispose();
 
     }
 }

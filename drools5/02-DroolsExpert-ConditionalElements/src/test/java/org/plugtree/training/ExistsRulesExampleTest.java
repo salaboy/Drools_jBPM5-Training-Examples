@@ -71,7 +71,8 @@ public class ExistsRulesExampleTest  {
         //This rule was fired after "Remove playlists with more than two songs"
         //retracted the 3 songs playlist.
         Assert.assertTrue(firedRules.contains("Warn when there are no playlists with more than two songs in my world"));
-
+        
+        ksession.dispose();
     }
 
     /**

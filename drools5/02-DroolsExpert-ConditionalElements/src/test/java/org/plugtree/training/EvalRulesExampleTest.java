@@ -66,7 +66,7 @@ public class EvalRulesExampleTest {
         Assert.assertTrue(firedRules.contains("Warn when we have a Playlist with more than two songs AND containing 'Thriller'"));
         Assert.assertTrue(firedRules.contains("Warn when we have a Playlist longer than 9000 seconds"));
 
-
+        ksession.dispose();
     }
 
     /**

@@ -61,6 +61,8 @@ public class SimpleRulesExampleTest {
         //"Warn when we have a POP songs and Playlist" is not fired because the existing POP song
         //is inside the playlist. When you insert a "Complex" object, the
         //objects references that it contains are not inserted.
+        
+        ksession.dispose();
 
     }
 

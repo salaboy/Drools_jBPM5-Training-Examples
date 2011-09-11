@@ -1,6 +1,7 @@
 package org.plugtree.examples;
 
 
+import junit.framework.Assert;
 import org.drools.KnowledgeBase;
 import org.drools.KnowledgeBaseFactory;
 import org.drools.builder.KnowledgeBuilder;
@@ -24,6 +25,7 @@ public class FirstExampleTest {
      */
     @Test
     public void catOnATreeTest() {
+        
         // Create the Knowledge Builder
         KnowledgeBuilder kbuilder = KnowledgeBuilderFactory.newKnowledgeBuilder();
         // Add our rules
@@ -64,7 +66,10 @@ public class FirstExampleTest {
         // We will fire all the rules that were activated
         ksession.fireAllRules();
         
+        Assert.assertEquals(pet.getPosition(), "on the street");
         
+        //Dispose the knowledge session
+        ksession.dispose();
 
     }
 }

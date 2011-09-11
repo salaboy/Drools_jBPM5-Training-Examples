@@ -133,6 +133,7 @@ public class SpreadsheetHandsOnLabsTest  {
         Assert.assertEquals("",sony_lcd_price.doubleValue(), sonyLCDTV1.getPrice(),0.1);
         Assert.assertEquals("",sony_lcd_price.doubleValue(), sonyLCDTV2.getPrice(),0.1);
         
-
+        
+        ksession.dispose();
     }
 }

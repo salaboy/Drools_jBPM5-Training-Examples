@@ -75,7 +75,7 @@ public class SimpleRulesExampleTest  {
         Assert.assertEquals(1,firedRules.size());
         Assert.assertTrue(firedRules.contains("Warn when we have a Playlist with one song OR containing 'Thriller'"));
 
-
+        ksession.dispose();
     }
 
     /**
