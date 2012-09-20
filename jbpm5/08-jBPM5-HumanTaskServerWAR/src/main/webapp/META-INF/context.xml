@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Context antiJARLocking="true" path="HumanTaskService">
+    <!--Resource name="bean/HumanTaskService" auth="Container"
+            type="org.jbpm.task.service.local.LocalTaskService"/-->
+            <ResourceLink 
+            name="bean/HumanTaskService"
+            global="bean/HumanTaskService"
+            type="org.jbpm.task.service.local.LocalTaskService"/>
+</Context>
